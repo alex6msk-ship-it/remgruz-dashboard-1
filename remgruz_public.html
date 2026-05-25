@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RemGruz #1 — СВОД</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f172a;--bg2:#1e293b;--bg3:#263347;
+  --border:#334155;--text:#e2e8f0;--muted:#94a3b8;--accent:#f59e0b;
+  --green:#22c55e;--red:#ef4444;--blue:#3b82f6;--purple:#8b5cf6;
+  --green-bg:#052e16;--red-bg:#450a0a;--amber-bg:#451a03;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:16px}
+/* ─── Header ─── */
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding:14px 20px;background:var(--bg2);border:1px solid var(--border);border-radius:14px}
+.hlogo{display:flex;align-items:center;gap:12px}
+.hicon{width:42px;height:42px;background:linear-gradient(135deg,#f59e0b,#ea580c);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.htitle h1{font-size:16px;font-weight:700;color:#f1f5f9}
+.htitle p{font-size:11px;color:var(--muted);margin-top:2px}
+.hright{display:flex;align-items:center;gap:14px}
+.hperiod{font-size:13px;font-weight:700;color:var(--accent)}
+.hdate{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite;display:inline-block;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.btn-refresh{padding:7px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.btn-refresh:hover{border-color:var(--accent);color:var(--accent)}
+.spin{display:inline-block;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* ─── Loading ─── */
+#loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:14px}
+.loader{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+.load-txt{color:var(--muted);font-size:13px;text-align:center;max-width:340px;line-height:1.6}
+.err-title{color:var(--red);font-size:15px;font-weight:600}
+.err-detail{color:var(--muted);font-size:12px;margin-top:4px;font-family:monospace;word-break:break-all;max-width:500px;text-align:center;line-height:1.5}
+.btn-retry{padding:8px 22px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px}
+/* ─── Setup banner ─── */
+.setup-banner{background:#1a1500;border:1px solid #854d0e;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:none}
+.setup-banner h3{color:#fbbf24;font-size:14px;margin-bottom:8px}
+.setup-banner ol{color:var(--muted);font-size:13px;padding-left:20px;line-height:2}
+.setup-banner code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:12px;color:#f59e0b}
+/* ─── Section label ─── */
+.slabel{font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin:0 0 10px 2px}
+/* ─── Gauges ─── */
+.gauge-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.gpanel{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:16px;text-align:center}
+.gpanel-title{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--bg3)}
+.gauge{width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;margin:0 auto}
+.gauge::before{content:'';position:absolute;inset:11px;border-radius:50%;background:var(--bg2)}
+.gauge-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center}
+.gauge-pct{font-size:18px;font-weight:800;line-height:1}
+.gauge-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.gauge-vals{margin-top:8px;font-size:11px;color:var(--muted);line-height:1.7;text-align:center}
+.gauge-fact{font-weight:700}
+/* ─── Detail row ─── */
+.detail-row{display:grid;grid-template-columns:1.6fr 1fr;gap:12px;margin-bottom:20px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:16px 18px}
+.card-title{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:12px}
+.divider{height:1px;background:var(--bg3);margin:14px 0}
+/* ─── Tables ─── */
+.ctable{width:100%;border-collapse:collapse}
+.ctable th{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:5px 7px;border-bottom:2px solid var(--bg3);text-align:left;font-weight:600}
+.ctable td{font-size:11px;padding:8px 7px;border-bottom:1px solid var(--bg3);color:var(--text)}
+.ctable tr:last-child td{border-bottom:none}
+.ctable tr:hover td{background:var(--bg3)}
+.ctable td:first-child{color:var(--muted);font-size:10px}
+.badge{display:inline-block;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700}
+.bg{background:#052e16;color:#4ade80}
+.ba{background:#451a03;color:#fbbf24}
+.br{background:#450a0a;color:#f87171}
+.dpos{color:#4ade80;font-size:10px}
+.dneg{color:#f87171;font-size:10px}
+.sub-row td{background:var(--bg3)}
+.sub-row td:first-child{padding-left:18px;font-size:10px;color:#64748b}
+/* ─── Pipeline ─── */
+.pipe-item{padding:10px 0;border-bottom:1px solid var(--bg3)}
+.pipe-item:last-of-type{border-bottom:none}
+.plabel{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}
+.pcount{font-size:24px;font-weight:800;color:var(--text);line-height:1;display:inline}
+.punit{font-size:11px;color:var(--muted);margin-left:4px}
+.pamount{font-size:12px;font-weight:600;color:var(--accent);margin-top:3px}
+.pbar{height:3px;background:var(--bg3);border-radius:2px;margin-top:7px;overflow:hidden}
+.pfill{height:100%;border-radius:2px}
+.mprog{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:12px;margin-top:14px}
+.mptitle{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:9px}
+.mprow{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
+.mplabel{color:var(--muted)}
+.mpval{font-weight:700}
+.mpbar{height:5px;background:var(--border);border-radius:3px;margin:4px 0 10px}
+.mpfill{height:100%;border-radius:3px;transition:width .6s ease}
+.mpnote{font-size:10px;color:var(--muted);margin-top:4px}
+/* ─── Charts ─── */
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.ctitle{font-size:12px;font-weight:600;color:var(--muted)}
+.csub{font-size:10px;color:#475569;margin:2px 0 12px}
+canvas{max-width:100%}
+/* ─── Daily ─── */
+.daily-stats{display:flex;gap:14px;flex-wrap:wrap;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;margin-bottom:14px}
+.dstat-l{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.dstat-v{font-size:15px;font-weight:700;color:var(--text)}
+.dstat-s{font-size:10px;color:var(--muted)}
+/* ─── Countdown ─── */
+.refresh-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:9px;margin-bottom:16px;font-size:11px;color:var(--muted)}
+.rbar-fill{height:3px;background:var(--bg3);border-radius:2px;flex:1;overflow:hidden}
+.rbar-prog{height:100%;background:var(--accent);border-radius:2px;transition:width 1s linear}
+/* ─── Auto-refresh toggle ─── */
+.toggle-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
+.toggle{position:relative;width:32px;height:18px;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0}
+.tslider{position:absolute;inset:0;background:var(--bg3);border-radius:18px;transition:.3s}
+.tslider::before{content:'';position:absolute;height:12px;width:12px;left:3px;bottom:3px;background:var(--muted);border-radius:50%;transition:.3s}
+input:checked+.tslider{background:var(--accent)}
+input:checked+.tslider::before{transform:translateX(14px);background:#000}
+/* ─── Comparison cards ─── */
+.cmp-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.cmp-card{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:16px 18px}
+.cmp-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--muted);margin-bottom:12px}
+.cmp-vs{display:flex;align-items:flex-end;gap:10px;margin-bottom:10px}
+.cmp-main{display:flex;flex-direction:column}
+.cmp-main-val{font-size:20px;font-weight:800;line-height:1;color:var(--text)}
+.cmp-main-lbl{font-size:10px;color:var(--muted);margin-top:3px}
+.cmp-arrow{font-size:22px;line-height:1;padding-bottom:2px;opacity:.7}
+.cmp-ref{display:flex;flex-direction:column}
+.cmp-ref-val{font-size:14px;font-weight:700;line-height:1}
+.cmp-ref-lbl{font-size:10px;color:var(--muted);margin-top:3px}
+.cmp-bar-wrap{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;margin:10px 0 8px}
+.cmp-bar{height:100%;border-radius:3px;transition:width .6s ease}
+.cmp-delta{font-size:11px;font-weight:600}
+.cmp-pct{font-size:13px;font-weight:800}
+/* ─── Plan card ─── */
+.plan-big{font-size:42px;font-weight:900;line-height:1;letter-spacing:-.02em}
+.plan-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.proj-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--bg3)}
+/* ─── Responsive ─── */
+@media(max-width:700px){.gauge-row,.detail-row,.chart-row,.cmp-row{grid-template-columns:1fr}.hright{flex-direction:column;align-items:flex-end;gap:6px}}
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="hdr">
+  <div class="hlogo">
+    <div class="hicon">🚛</div>
+    <div class="htitle">
+      <h1>RemGruz #1 — СВОД</h1>
+      <p>Операционный дашборд · <span id="h-period">—</span></p>
+    </div>
+  </div>
+  <div class="hright">
+    <div class="toggle-row">
+      <label class="toggle"><input type="checkbox" id="autoRefreshToggle" checked onchange="toggleAutoRefresh()"><span class="tslider"></span></label>
+      Авто-обновление
+    </div>
+    <div class="hdate"><span class="live-dot"></span><span id="h-date">—</span></div>
+    <button class="btn-refresh" onclick="triggerRefresh()" id="btn-ref">
+      <span id="btn-icon">↺</span> Обновить
+    </button>
+  </div>
+</div>
+
+<!-- ═══ SETUP BANNER (показывается при ошибке доступа) ═══ -->
+<div class="setup-banner" id="setup-banner">
+  <h3>⚙️ Необходима публикация таблицы</h3>
+  <ol>
+    <li>Откройте таблицу в Google Sheets</li>
+    <li>Файл → <strong>Поделиться</strong> → <strong>Опубликовать в интернете</strong></li>
+    <li>Выберите лист <code>СВОД</code> → формат <code>CSV</code> → нажмите <strong>Опубликовать</strong></li>
+    <li>Повторите для листа <code>ФинРез По суткам</code></li>
+    <li>Обновите эту страницу</li>
+  </ol>
+</div>
+
+<!-- ═══ LOADING ═══ -->
+<div id="loading">
+  <div class="loader"></div>
+  <div class="load-txt">Загружаю данные из Google Sheets…</div>
+</div>
+
+<!-- ═══ COUNTDOWN ═══ -->
+<div class="refresh-bar" id="refresh-bar" style="display:none">
+  <span style="white-space:nowrap">Следующее обновление: <strong id="countdown">5:00</strong></span>
+  <div class="rbar-fill"><div class="rbar-prog" id="rbar-prog" style="width:100%"></div></div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app" style="display:none">
+  <div class="slabel">Нарастающий итог · месяц</div>
+  <div class="gauge-row" id="gauges-month"></div>
+
+  <div class="slabel">Сегодня</div>
+  <div class="gauge-row" id="gauges-today"></div>
+
+  <div class="detail-row">
+    <div class="card">
+      <div class="card-title">Детализация · нарастающий итог</div>
+      <table class="ctable">
+        <thead><tr><th>Показатель</th><th>План</th><th>Факт</th><th>Δ</th><th>%</th></tr></thead>
+        <tbody id="tbody-month"></tbody>
+      </table>
+      <div class="divider"></div>
+      <div class="card-title">Сегодня</div>
+      <table class="ctable">
+        <thead><tr><th>Показатель</th><th>План</th><th>Факт</th><th>%</th></tr></thead>
+        <tbody id="tbody-today"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">Пайплайн · прямо сейчас</div>
+      <div id="pipeline"></div>
+    </div>
+  </div>
+
+  <div class="slabel">Сравнительный анализ · маржа без НДС</div>
+  <div class="cmp-row" id="cmp-row"></div>
+
+  <div class="slabel">Динамика по месяцам</div>
+  <div class="chart-row">
+    <div class="card">
+      <div class="ctitle">Маржа без НДС · план vs факт</div>
+      <div class="csub">Февраль – текущий период</div>
+      <canvas id="cMonthly" height="195"></canvas>
+    </div>
+    <div class="card">
+      <div class="ctitle">Средний чек без НДС</div>
+      <div class="csub">Динамика по месяцам</div>
+      <canvas id="cCheck" height="195"></canvas>
+    </div>
+  </div>
+
+  <div class="slabel" id="daily-label" style="display:none">Суточная динамика</div>
+  <div class="card" id="daily-card" style="display:none">
+    <div class="ctitle">Ежедневная маржа без НДС</div>
+    <div class="csub" id="daily-sub">—</div>
+    <div class="daily-stats" id="daily-stats"></div>
+    <canvas id="cDaily" height="145"></canvas>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// CONFIG
+// ══════════════════════════════════════
+// Публичный ID из "Опубликовать в интернете"
+const PUB_ID = '2PACX-1vTBEpUeJqrkXv6w0oB0WfndmwMBm6uCliLgtaOoR5iKYoljdETkToMyVLWfgZBuYg';
+const SHEET_ID = '1UAK8cRR8xFP2a-AnIWT1yJKqXhxShoMi';
+const GID_SVOD = '8846691';
+const GID_DAILY = '902143223';
+const AUTO_REFRESH_SEC = 300; // 5 минут
+
+// Публичные URL — работают напрямую без прокси (CORS открыт Google для опубликованных листов)
+function pubUrl(gid) {
+  return `https://docs.google.com/spreadsheets/d/e/${PUB_ID}/pub?output=csv&gid=${gid}`;
+}
+function directUrl(gid) {
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
+}
+
+// Прокси как запасной вариант
+const PROXIES = [
+  u => u, // прямой (публичный — работает без прокси)
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
+  u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+];
+
+// ══════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════
+const CH = {};
+Chart.defaults.font.family = "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = '#334155';
+
+function pN(s) {
+  if (s == null || s === '') return null;
+  const n = parseFloat(String(s).replace(/[₽\s"'р.]/g, '').replace(/,/g, ''));
+  return isNaN(n) ? null : n;
+}
+function pP(s) {
+  if (!s) return null;
+  const n = parseFloat(String(s).replace('%', '').trim());
+  return isNaN(n) ? null : n;
+}
+function fR(n) {
+  if (n == null) return '—';
+  const a = Math.abs(n), sg = n < 0 ? '−' : '';
+  if (a >= 1e6) return sg + (a / 1e6).toFixed(2) + ' млн ₽';
+  if (a >= 1e3) return sg + Math.round(a / 1e3) + ' тыс ₽';
+  return sg + Math.round(a) + ' ₽';
+}
+function fP(n) { return n != null ? Math.round(n) + '%' : '—'; }
+function pc(p) { return p == null ? 'amber' : p >= 110 ? 'green' : p >= 90 ? 'amber' : p >= 70 ? 'orange' : 'red'; }
+function cH(p) { return { green: '#22c55e', amber: '#f59e0b', orange: '#f97316', red: '#ef4444' }[pc(p)]; }
+function bc(p) { return { green: 'bg', amber: 'ba', orange: 'ba', red: 'br' }[pc(p)]; }
+
+function parseCells(str, n) {
+  const out = []; let rest = str || '', i = 0;
+  while (i < n) {
+    if (rest.startsWith('"')) {
+      let e = 1;
+      while (e < rest.length && rest[e] !== '"') e++;
+      out.push(rest.slice(1, e).trim());
+      rest = e + 1 < rest.length ? rest.slice(e + 2) : '';
+    } else {
+      const c = rest.indexOf(',');
+      out.push(c < 0 ? rest.trim() : rest.slice(0, c).trim());
+      rest = c < 0 ? '' : rest.slice(c + 1);
+    }
+    i++;
+  }
+  return out;
+}
+
+// ══════════════════════════════════════
+// SVOD PARSER (читает СВОД sheet CSV)
+// ══════════════════════════════════════
+function parseSvod(raw) {
+  // Находим секцию СВОД — может быть весь лист или часть
+  let sec = raw;
+  const si = raw.indexOf('СВОД ,');
+  if (si >= 0) {
+    let ei = raw.indexOf(' март факт', si);
+    if (ei < 0) ei = si + 4000;
+    sec = raw.slice(si, ei);
+  }
+
+  const dateM = raw.match(/СВОД\s*,(\d+\/\d+\/\d+)/);
+  const perM = raw.match(/Период,([^,\n\r]+)/);
+
+  function row(label) {
+    const i = sec.indexOf(label);
+    if (i < 0) return [];
+    const after = sec.slice(i + label.length).replace(/^[\s,]*/, '');
+    return parseCells(after, 10);
+  }
+
+  function pipeVal(label) {
+    const quoted = '"' + label + '"';
+    let i = sec.indexOf(quoted);
+    if (i < 0) { i = sec.indexOf(label); if (i < 0) return 0; }
+    let afterStart = i + (sec[i] === '"' ? quoted.length : label.length);
+    // НЕ стриппим leading commas — они несут позиционную информацию
+    const after = sec.slice(afterStart);
+    const cs = parseCells(after, 10);
+    // 0 — stripped-формат (одиночный лист CSV), 5/6 — concatenated MCP-формат
+    for (const idx of [0, 5, 6, 4, 3, 7, 8, 9]) {
+      const v = pN(cs[idx]);
+      if (v !== null && v > 0) return v;
+    }
+    // Отдельно проверяем 0 на случай если значение равно 0 (корректный ноль)
+    const v0 = pN(cs[0]);
+    if (v0 !== null) return v0;
+    return 0;
+  }
+
+  const mar = row(',Маржа ВСЕГО без НДС,');
+  const mch = row(',Обслужено машин,');
+  const sob = row(',- собственные,');
+  const kom = row(',- коммерция ');
+  const chk = row(',Ср чек без НДС ');
+
+  const d = (a, i) => pN(a[i]);
+  const p = (a, i) => pP(a[i]);
+
+  return {
+    date: dateM ? dateM[1] : '',
+    period: perM ? perM[1].trim() : '',
+    m: { plan: d(mar, 0), fact: d(mar, 1), delta: d(mar, 2), pct: p(mar, 3), planT: d(mar, 4), factT: d(mar, 5), pctT: p(mar, 6) },
+    mc: { plan: d(mch, 0), fact: d(mch, 1), delta: d(mch, 2), pct: p(mch, 3), planT: d(mch, 4), factT: d(mch, 5), pctT: p(mch, 6) },
+    s: { plan: d(sob, 0), fact: d(sob, 1), delta: d(sob, 2), pct: p(sob, 3) },
+    k: { plan: d(kom, 0), fact: d(kom, 1), delta: d(kom, 2), pct: p(kom, 3) },
+    ch: { plan: d(chk, 0), fact: d(chk, 1), delta: d(chk, 2), pct: p(chk, 3), planT: d(chk, 4), factT: d(chk, 5), pctT: p(chk, 6) },
+    pipe: {
+      workSht: pipeVal('В работе, шт'),
+      workRub: pipeVal('В работе, ₽'),
+      soglSht: pipeVal('На согласовании, шт'),
+      soglRub: pipeVal('На согласовании, ₽'),
+      queueSht: pipeVal('В очереди, шт '),
+    }
+  };
+}
+
+// ══════════════════════════════════════
+// DAILY PARSER (читает ФинРез По суткам)
+// ══════════════════════════════════════
+function parseDaily(raw) {
+  let sec = raw;
+  const marker = 'ФинРез По суткам ';
+  const si = raw.indexOf(marker);
+  if (si >= 0) {
+    let ei = raw.indexOf('СВОД ,', si + marker.length);
+    if (ei < 0) ei = si + 10000;
+    sec = raw.slice(si, ei);
+  }
+
+  const daysM = sec.match(/Кол-во дн,(\d+)/);
+  const numDays = daysM ? +daysM[1] : 31;
+
+  const miCars = sec.indexOf(',Обслужено машин,');
+  let dailyCars = [];
+  if (miCars >= 0) {
+    const after = sec.slice(miCars + ',Обслужено машин,'.length);
+    const cs = parseCells(after, 42);
+    for (let i = 5; i < cs.length; i++) {
+      const v = pN(cs[i]); dailyCars.push(v != null ? v : 0);
+    }
+  }
+
+  // Маржа ВСЕГО без НДС — ищем и в concatenated (,,prefix) и в standalone CSV форматах
+  const marLabel = ',,Маржа ВСЕГО без НДС,';
+  const marLabel2 = 'Маржа ВСЕГО без НДС,'; // для standalone CSV без ведущих запятых
+  let miMar = sec.indexOf(marLabel);
+  let marOffset = marLabel.length;
+  if (miMar < 0) { miMar = sec.indexOf(marLabel2); marOffset = marLabel2.length; }
+
+  let dailyMargin = [];
+  let monthPlanMargin = null; // Полный план месяца — D12 = cs[0]
+
+  if (miMar >= 0) {
+    const after = sec.slice(miMar + marOffset);
+    const cs = parseCells(after, 42);
+    // cs[0] = план за весь месяц (столбец D в листе, ячейка D12)
+    monthPlanMargin = pN(cs[0]);
+    // cs[5..] = суточные значения факта
+    for (let i = 5; i < cs.length; i++) {
+      const v = pN(cs[i]); dailyMargin.push(v != null ? v : 0);
+    }
+  }
+
+  while (dailyMargin.length && dailyMargin[dailyMargin.length - 1] === 0) dailyMargin.pop();
+  while (dailyCars.length && dailyCars[dailyCars.length - 1] === 0) dailyCars.pop();
+
+  return { numDays, dailyMargin, dailyCars, monthPlanMargin };
+}
+
+// ══════════════════════════════════════
+// RENDER
+// ══════════════════════════════════════
+function gauge(pct, fact, plan) {
+  const deg = Math.min(pct || 0, 150) * 2.4;
+  const col = cH(pct);
+  return `<div class="gauge" style="background:conic-gradient(${col} ${deg}deg,#1e293b ${deg}deg)">
+    <div class="gauge-inner">
+      <div class="gauge-pct" style="color:${col}">${pct != null ? Math.round(pct) + '%' : '—'}</div>
+      <div class="gauge-lbl">план</div>
+    </div>
+  </div>
+  <div class="gauge-vals"><span class="gauge-fact" style="color:${col}">${fact}</span><br><span style="color:#475569;font-size:10px">${plan}</span></div>`;
+}
+function gp(title, inner) { return `<div class="gpanel"><div class="gpanel-title">${title}</div>${inner}</div>`; }
+
+function renderGauges(sv) {
+  document.getElementById('gauges-month').innerHTML =
+    gp('Маржа без НДС', gauge(sv.m.pct, fR(sv.m.fact), fR(sv.m.plan))) +
+    gp('Обслужено машин', gauge(sv.mc.pct, (sv.mc.fact || 0) + ' шт', (sv.mc.plan || 0) + ' шт')) +
+    gp('Средний чек', gauge(sv.ch.pct, fR(sv.ch.fact), fR(sv.ch.plan)));
+  document.getElementById('gauges-today').innerHTML =
+    gp('Маржа сегодня', gauge(sv.m.pctT, fR(sv.m.factT), fR(sv.m.planT))) +
+    gp('Машин сегодня', gauge(sv.mc.pctT, (sv.mc.factT || 0) + ' шт', (sv.mc.planT || 0) + ' шт')) +
+    gp('Ср. чек сегодня', gauge(sv.ch.pctT, fR(sv.ch.factT), fR(sv.ch.planT)));
+}
+
+function tr5(lbl, plan, fact, delta, pct, sub) {
+  const sg = (delta || 0) >= 0 ? '+' : '';
+  const dc = (delta || 0) >= 0 ? 'dpos' : 'dneg';
+  return `<tr class="${sub ? 'sub-row' : ''}">
+    <td>${lbl}</td><td>${plan}</td><td><strong>${fact}</strong></td>
+    <td><span class="${dc}">${sg}${delta}</span></td>
+    <td><span class="badge ${bc(pct)}">${fP(pct)}</span></td></tr>`;
+}
+function tr4(lbl, plan, fact, pct) {
+  return `<tr><td>${lbl}</td><td>${plan}</td><td><strong>${fact}</strong></td>
+    <td><span class="badge ${bc(pct)}">${fP(pct)}</span></td></tr>`;
+}
+
+function renderTables(sv) {
+  const { m, mc, s, k, ch } = sv;
+  document.getElementById('tbody-month').innerHTML =
+    tr5('Маржа ВСЕГО без НДС', fR(m.plan), fR(m.fact), fR(Math.abs(m.delta || 0)), m.pct) +
+    tr5('Обслужено машин', mc.plan || '—', mc.fact || '—', Math.abs(mc.delta || 0), mc.pct) +
+    tr5('· Собственные', s.plan || '—', s.fact || '—', '+' + Math.abs(s.delta || 0), s.pct, true) +
+    tr5('· Коммерция', k.plan || '—', k.fact || '—', k.delta || 0, k.pct, true) +
+    tr5('Средний чек без НДС', fR(ch.plan), fR(ch.fact), fR(Math.abs(ch.delta || 0)), ch.pct);
+  document.getElementById('tbody-today').innerHTML =
+    tr4('Маржа ВСЕГО без НДС', fR(m.planT), fR(m.factT), m.pctT) +
+    tr4('Обслужено машин', (mc.planT || 0) + '', (mc.factT || 0) + '', mc.pctT) +
+    tr4('Средний чек без НДС', fR(ch.planT), fR(ch.factT), ch.pctT);
+}
+
+function renderPipeline(sv) {
+  const { pipe: p, m } = sv;
+  const remaining = Math.max(0, (m.plan || 0) - (m.fact || 0));
+  const pctD = m.pct || 0;
+  document.getElementById('pipeline').innerHTML = `
+    <div class="pipe-item">
+      <div class="plabel">🔧 В работе</div>
+      <span class="pcount">${p.workSht}</span><span class="punit">машин</span>
+      <div class="pamount">${fR(p.workRub)}</div>
+      <div class="pbar"><div class="pfill" style="width:${Math.min(100, p.workSht * 8)}%;background:linear-gradient(90deg,#3b82f6,#8b5cf6)"></div></div>
+    </div>
+    <div class="pipe-item">
+      <div class="plabel">⏳ На согласовании</div>
+      <span class="pcount" style="color:${p.soglSht > 0 ? '#f59e0b' : '#475569'}">${p.soglSht}</span><span class="punit">машин</span>
+      <div class="pamount" style="color:${p.soglRub > 0 ? '#f59e0b' : '#475569'}">${p.soglRub > 0 ? fR(p.soglRub) : '—'}</div>
+      <div class="pbar"><div class="pfill" style="width:${Math.min(100, p.soglSht * 15)}%;background:#f59e0b"></div></div>
+    </div>
+    <div class="pipe-item">
+      <div class="plabel">📋 В очереди</div>
+      <span class="pcount" style="color:${p.queueSht > 0 ? '#8b5cf6' : '#475569'}">${p.queueSht}</span><span class="punit">машин</span>
+      <div class="pbar"><div class="pfill" style="width:${Math.min(100, p.queueSht * 20)}%;background:#8b5cf6"></div></div>
+    </div>
+    <div class="mprog">
+      <div class="mptitle">Прогресс месяца</div>
+      <div class="mprow"><span class="mplabel">Маржа · выполнение</span><span class="mpval" style="color:${cH(pctD)}">${fP(pctD)}</span></div>
+      <div class="mpbar"><div class="mpfill" style="width:${Math.min(100, pctD)}%;background:${cH(pctD)}"></div></div>
+      ${remaining > 0 ? `<div class="mpnote">До плана: ${fR(remaining)}</div>` : '<div class="mpnote" style="color:#22c55e">✓ План выполнен</div>'}
+    </div>`;
+}
+
+// ══════════════════════════════════════
+// COMPARISON CARDS
+// ══════════════════════════════════════
+function renderComparison(sv, daily) {
+  // Исторические данные (зафиксированы)
+  const HIST = {
+    apr: { fact: 5177902, plan: 6699000, days: 30 },
+    mar: { fact: 4431960, plan: 3978000, days: 31 },
+  };
+
+  const mayFact  = sv.m.fact  || 0;
+  // Полный план месяца — из D12 листа ФинРез По суткам (если есть), иначе из СВОД
+  const mayPlan  = (daily && daily.monthPlanMargin) ? daily.monthPlanMargin : (sv.m.plan || 0);
+  const mayPlanT = sv.m.planT || 0;
+  const mayFactT = sv.m.factT || 0;
+
+  // Определяем день месяца из sv.date (формат "5/25/2026")
+  let dayNum = new Date().getDate();
+  if (sv.date) {
+    const p = sv.date.split('/');
+    if (p.length >= 2) dayNum = parseInt(p[1]) || dayNum;
+  }
+  const daysInMonth = 31; // май
+  const daysLeft    = daysInMonth - dayNum;
+
+  // Апрель нарастающий до того же числа (апрель: 30 дней)
+  const aprToSameDay = Math.round(HIST.apr.fact / HIST.apr.days * dayNum);
+
+  // Проекция конца месяца (при текущем темпе)
+  const dailyAvg   = dayNum > 0 ? mayFact / dayNum : 0;
+  const projected  = Math.round(mayFact + dailyAvg * daysLeft);
+  const projVsPlan = mayPlan > 0 ? projected / mayPlan * 100 : null;
+
+  function cmpCard(label, mainVal, mainLbl, refVal, refLbl, showBar) {
+    const ratio = refVal > 0 ? mainVal / refVal * 100 : null;
+    const delta = mainVal - refVal;
+    const col   = ratio == null ? '#94a3b8' : ratio >= 100 ? '#22c55e' : ratio >= 80 ? '#f59e0b' : '#ef4444';
+    const arrow = ratio == null ? '→' : ratio >= 100 ? '↑' : '↓';
+    const bar   = Math.min(100, ratio || 0);
+    return `<div class="cmp-card">
+      <div class="cmp-label">${label}</div>
+      <div class="cmp-vs">
+        <div class="cmp-main">
+          <div class="cmp-main-val" style="color:${col}">${fR(mainVal)}</div>
+          <div class="cmp-main-lbl">${mainLbl}</div>
+        </div>
+        <div class="cmp-arrow" style="color:${col}">${arrow}</div>
+        <div class="cmp-ref">
+          <div class="cmp-ref-val" style="color:var(--muted)">${fR(refVal)}</div>
+          <div class="cmp-ref-lbl">${refLbl}</div>
+        </div>
+      </div>
+      ${showBar ? `<div class="cmp-bar-wrap"><div class="cmp-bar" style="width:${bar}%;background:${col}"></div></div>` : ''}
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="cmp-delta" style="color:${col}">${delta >= 0 ? '+' : ''}${fR(delta)}</span>
+        <span class="cmp-pct" style="color:${col}">${fP(ratio)}</span>
+      </div>
+    </div>`;
+  }
+
+  // Карточка 3 — Выполнение плана + проекция
+  const pctDone   = mayPlan > 0 ? mayFact / mayPlan * 100 : null;
+  const planCol   = cH(pctDone);
+  const planBar   = Math.min(100, pctDone || 0);
+  const card3 = `<div class="cmp-card">
+    <div class="cmp-label">Выполнение плана · май</div>
+    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+      <div class="plan-big" style="color:${planCol}">${fP(pctDone)}</div>
+      <div style="font-size:12px;color:var(--muted)">от плана ${fR(mayPlan)}</div>
+    </div>
+    <div class="cmp-bar-wrap" style="margin:6px 0 10px">
+      <div class="cmp-bar" style="width:${planBar}%;background:${planCol}"></div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:10px">
+      Факт: <strong style="color:${planCol}">${fR(mayFact)}</strong>
+      &nbsp;·&nbsp; Осталось дней: <strong>${daysLeft}</strong>
+    </div>
+    <div class="proj-row">
+      <div>
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Проекция конца месяца</div>
+        <div style="font-size:14px;font-weight:700;color:${projVsPlan && projVsPlan >= 100 ? '#22c55e' : '#f59e0b'};margin-top:3px">${fR(projected)}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Прогноз vs план</div>
+        <div style="font-size:14px;font-weight:700;color:${projVsPlan && projVsPlan >= 100 ? '#22c55e' : '#f59e0b'};margin-top:3px">${fP(projVsPlan)}</div>
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('cmp-row').innerHTML =
+    cmpCard(
+      `Май (1–${dayNum}) vs Апрель (весь месяц)`,
+      mayFact, `Май нарастающий (${dayNum} дн.)`,
+      HIST.apr.fact, 'Апрель · итог месяца', true
+    ) +
+    cmpCard(
+      `Май (1–${dayNum}) vs Апрель (1–${dayNum})`,
+      mayFact, `Май нарастающий`,
+      aprToSameDay, `Апрель до ${dayNum}-го числа`, true
+    ) +
+    card3;
+}
+
+function renderMonthly(sv) {
+  const months = ['Февраль', 'Март', 'Апрель', 'Текущий*'];
+  const pM = [2904000, 3978000, 6699000, sv.m.plan || 0];
+  const fM = [2791281, 4431960, 5177902, sv.m.fact || 0];
+  const pC = [24000, 26000, 29000, sv.ch.plan || 29000];
+  const fC = [25331, 32829, 33406, sv.ch.fact || 0];
+  const pts = pM.map((p, i) => p > 0 ? fM[i] / p : null);
+
+  if (CH.m) CH.m.destroy();
+  CH.m = new Chart(document.getElementById('cMonthly'), {
+    type: 'bar',
+    data: {
+      labels: months, datasets: [
+        { label: 'План', data: pM, backgroundColor: '#1e293b', borderColor: '#475569', borderWidth: 1, borderRadius: 5, borderSkipped: false },
+        {
+          label: 'Факт', data: fM,
+          backgroundColor: pts.map(p => p == null ? '#334155' : p >= 1.05 ? '#052e16' : p >= 0.9 ? '#451a03' : '#450a0a'),
+          borderColor: pts.map(p => p == null ? '#475569' : p >= 1.05 ? '#22c55e' : p >= 0.9 ? '#f59e0b' : '#ef4444'),
+          borderWidth: 2, borderRadius: 5, borderSkipped: false
+        }
+      ]
+    },
+    options: {
+      responsive: true, plugins: {
+        legend: { labels: { boxWidth: 10, font: { size: 10 } } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${(ctx.raw / 1e6).toFixed(2)} млн ₽` } }
+      },
+      scales: {
+        x: { grid: { color: '#1e293b' } },
+        y: { grid: { color: '#1e293b' }, ticks: { callback: v => (v / 1e6).toFixed(1) + ' млн' } }
+      }
+    }
+  });
+
+  if (CH.c) CH.c.destroy();
+  CH.c = new Chart(document.getElementById('cCheck'), {
+    type: 'line',
+    data: {
+      labels: months, datasets: [
+        { label: 'Факт', data: fC, borderColor: '#f59e0b', backgroundColor: '#f59e0b18', borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: '#f59e0b', fill: true, tension: 0.3 },
+        { label: 'План', data: pC, borderColor: '#475569', borderWidth: 1.5, borderDash: [4, 4], pointRadius: 3, pointBackgroundColor: '#475569', fill: false, tension: 0.3 }
+      ]
+    },
+    options: {
+      responsive: true, plugins: {
+        legend: { labels: { boxWidth: 10, font: { size: 10 } } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${Math.round(ctx.raw).toLocaleString()} ₽` } }
+      },
+      scales: {
+        x: { grid: { color: '#1e293b' } },
+        y: { grid: { color: '#1e293b' }, ticks: { callback: v => (v / 1000).toFixed(0) + ' тыс' }, min: 0 }
+      }
+    }
+  });
+}
+
+function renderDaily(daily, sv) {
+  if (!daily || !daily.dailyMargin.length) return;
+  const n = Math.max(daily.dailyMargin.length, daily.dailyCars.length);
+  const margins = daily.dailyMargin.slice(0, n);
+  const cars = daily.dailyCars.slice(0, n);
+  while (margins.length < n) margins.push(0);
+  while (cars.length < n) cars.push(0);
+  const planDay = (sv.m.plan || 0) / daily.numDays;
+  const maxM = Math.max(...margins);
+  const maxDay = margins.indexOf(maxM) + 1;
+  const avg = margins.reduce((a, b) => a + b, 0) / margins.length;
+  const above = margins.filter(v => v > planDay).length;
+
+  document.getElementById('daily-label').style.display = '';
+  document.getElementById('daily-card').style.display = '';
+  document.getElementById('daily-sub').textContent = `Факт по дням · ${n} дней · пунктир = дневной план (${fR(planDay)})`;
+  document.getElementById('daily-stats').innerHTML = `
+    <div><div class="dstat-l">Лучший день</div><div class="dstat-v" style="color:#22c55e">${maxDay} числа</div><div class="dstat-s">${fR(maxM)}</div></div>
+    <div><div class="dstat-l">Среднее/день</div><div class="dstat-v" style="color:#f59e0b">${fR(avg)}</div><div class="dstat-s">план: ${fR(planDay)}</div></div>
+    <div><div class="dstat-l">Выше плана</div><div class="dstat-v" style="color:#3b82f6">${above} из ${n}</div><div class="dstat-s">${Math.round(above / n * 100)}%</div></div>
+    <div><div class="dstat-l">Сегодня</div><div class="dstat-v" style="color:${cH(sv.m.pctT)}">${fR(sv.m.factT)}</div><div class="dstat-s">${sv.mc.factT || 0} машин</div></div>`;
+
+  if (CH.d) CH.d.destroy();
+  CH.d = new Chart(document.getElementById('cDaily'), {
+    type: 'bar',
+    data: {
+      labels: Array.from({ length: n }, (_, i) => i + 1), datasets: [
+        {
+          label: 'Маржа без НДС', data: margins,
+          backgroundColor: margins.map(v => v >= planDay ? '#052e16' : v >= planDay * .6 ? '#451a03' : '#450a0a'),
+          borderColor: margins.map(v => v >= planDay ? '#22c55e' : v >= planDay * .6 ? '#f59e0b' : '#ef4444'),
+          borderWidth: 1.5, borderRadius: 3, yAxisID: 'y', order: 2
+        },
+        { label: 'ТС шт', data: cars, type: 'line', borderColor: '#8b5cf6', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#8b5cf6', tension: 0.3, yAxisID: 'y2', order: 1 },
+        { label: 'Дневной план', data: Array(n).fill(planDay), type: 'line', borderColor: '#f59e0b', borderWidth: 1.5, borderDash: [5, 4], pointRadius: 0, yAxisID: 'y', order: 0, fill: false }
+      ]
+    },
+    options: {
+      responsive: true, interaction: { mode: 'index' }, plugins: {
+        legend: { labels: { boxWidth: 10, font: { size: 10 } } },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              if (ctx.datasetIndex === 0) return ` Маржа: ${fR(ctx.raw)}`;
+              if (ctx.datasetIndex === 1) return ` ТС: ${ctx.raw} шт`;
+              return ` План/день: ${fR(ctx.raw)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: '#1e293b' }, ticks: { font: { size: 9 } } },
+        y: { position: 'left', grid: { color: '#1e293b' }, ticks: { callback: v => (v / 1000).toFixed(0) + ' тыс' } },
+        y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { callback: v => v + ' шт', stepSize: 2 }, min: 0, max: 18 }
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════
+// FETCH
+// ══════════════════════════════════════
+async function fetchCsv(gid) {
+  // Сначала пробуем публичный URL (опубликованный лист — без CORS)
+  const pub = pubUrl(gid);
+  const direct = directUrl(gid);
+  let lastErr = null;
+
+  // Пробуем pub URL напрямую, потом direct через прокси
+  const attempts = [
+    pub,
+    ...PROXIES.slice(1).map(fn => fn(direct)),
+    PROXIES[0](direct),
+  ];
+
+  for (let i = 0; i < attempts.length; i++) {
+    const url = attempts[i];
+    try {
+      const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(8000) });
+      if (!res.ok) { lastErr = new Error(`HTTP ${res.status} (прокси ${i+1})`); continue; }
+      const text = await res.text();
+      // Проверяем что получили CSV, а не HTML-редирект на логин Google
+      if (text.includes('<!DOCTYPE') || text.includes('<html')) {
+        lastErr = new Error(`Таблица не опубликована публично (прокси ${i+1} вернул HTML)`);
+        continue;
+      }
+      if (text.length < 50) { lastErr = new Error(`Пустой ответ (прокси ${i+1})`); continue; }
+      console.log(`✓ Загружено через прокси ${i+1}: ${url.slice(0,60)}…`);
+      return text;
+    } catch (e) {
+      lastErr = new Error(`Прокси ${i+1} недоступен: ${e.message}`);
+      console.warn(lastErr.message);
+    }
+  }
+
+  throw new Error(
+    'Не удалось загрузить данные ни через один прокси.\n' +
+    'Убедитесь что таблица опубликована: Файл → Поделиться → Опубликовать в интернете.\n' +
+    'Последняя ошибка: ' + (lastErr?.message || '?')
+  );
+}
+
+// ══════════════════════════════════════
+// AUTO-REFRESH TIMER
+// ══════════════════════════════════════
+let refreshTimer = null;
+let countdownTimer = null;
+let secondsLeft = AUTO_REFRESH_SEC;
+
+function toggleAutoRefresh() {
+  const on = document.getElementById('autoRefreshToggle').checked;
+  if (on) startCountdown();
+  else {
+    clearTimeout(refreshTimer);
+    clearInterval(countdownTimer);
+    document.getElementById('refresh-bar').style.display = 'none';
+  }
+}
+
+function startCountdown() {
+  clearTimeout(refreshTimer);
+  clearInterval(countdownTimer);
+  secondsLeft = AUTO_REFRESH_SEC;
+  updateCountdownUI();
+  document.getElementById('refresh-bar').style.display = document.getElementById('app').style.display === 'block' ? 'flex' : 'none';
+
+  countdownTimer = setInterval(() => {
+    secondsLeft--;
+    updateCountdownUI();
+    if (secondsLeft <= 0) {
+      clearInterval(countdownTimer);
+      load();
+    }
+  }, 1000);
+}
+
+function updateCountdownUI() {
+  const m = Math.floor(secondsLeft / 60), s = secondsLeft % 60;
+  const el = document.getElementById('countdown');
+  if (el) el.textContent = m + ':' + String(s).padStart(2, '0');
+  const prog = document.getElementById('rbar-prog');
+  if (prog) prog.style.width = (secondsLeft / AUTO_REFRESH_SEC * 100) + '%';
+}
+
+// ══════════════════════════════════════
+// MAIN
+// ══════════════════════════════════════
+function showLoading(txt) {
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('refresh-bar').style.display = 'none';
+  document.getElementById('loading').innerHTML = `<div class="loader"></div><div class="load-txt">${txt}</div>`;
+}
+
+function showError(msg, detail) {
+  document.getElementById('setup-banner').style.display = detail && detail.includes('403') ? 'block' : 'none';
+  document.getElementById('loading').innerHTML = `
+    <div class="err-title">Ошибка загрузки</div>
+    <div class="load-txt" style="margin-top:6px">${msg}</div>
+    ${detail ? `<div class="err-detail">${detail}</div>` : ''}
+    <button class="btn-retry" onclick="load()">↺ Повторить</button>`;
+}
+
+async function load() {
+  showLoading('Загружаю данные из Google Sheets…');
+
+  const icon = document.getElementById('btn-icon');
+  if (icon) { icon.className = 'spin'; icon.textContent = '↺'; }
+
+  try {
+    // Параллельно загружаем СВОД и ФинРез По суткам
+    showLoading('Загружаю лист СВОД…');
+    let svodCsv, dailyCsv = null;
+
+    svodCsv = await fetchCsv(GID_SVOD);
+
+    try {
+      showLoading('Загружаю суточную статистику…');
+      dailyCsv = await fetchCsv(GID_DAILY);
+    } catch (e) {
+      // Суточные данные опциональны
+      console.warn('Не удалось загрузить ФинРез По суткам:', e.message);
+    }
+
+    const sv = parseSvod(svodCsv);
+    if (!sv || sv.m.plan == null) throw new Error('Данные СВОД не распознаны. Проверьте публикацию листа.');
+
+    const daily = dailyCsv ? parseDaily(dailyCsv) : null;
+
+    // Если daily не получили из отдельного листа — пробуем из СВОД CSV
+    const daily2 = daily || (svodCsv.indexOf('ФинРез По суткам') >= 0 ? parseDaily(svodCsv) : null);
+
+    const per = sv.period;
+    document.getElementById('h-period').textContent = (per ? per.charAt(0).toUpperCase() + per.slice(1) : '—') + ' 2026';
+    document.getElementById('h-date').textContent = 'Данные на ' + (sv.date || new Date().toLocaleDateString('ru'));
+
+    renderGauges(sv);
+    renderTables(sv);
+    renderPipeline(sv);
+    renderComparison(sv, daily2);
+    renderMonthly(sv);
+    if (daily2) renderDaily(daily2, sv);
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('setup-banner').style.display = 'none';
+
+    if (document.getElementById('autoRefreshToggle').checked) startCountdown();
+
+  } catch (e) {
+    showError(e.message, e.cause || '');
+  } finally {
+    if (icon) { icon.className = ''; icon.textContent = '↺'; }
+  }
+}
+
+function triggerRefresh() {
+  clearTimeout(refreshTimer);
+  clearInterval(countdownTimer);
+  load();
+}
+
+load();
+</script>
+</body>
+</html>
