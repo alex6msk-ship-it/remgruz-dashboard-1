@@ -202,7 +202,7 @@ input:checked+.tslider::before{transform:translateX(14px);background:#000}
       <div class="divider"></div>
       <div class="card-title">Сегодня</div>
       <table class="ctable">
-        <thead><tr><th>Показатель</th><th>План</th><th>Факт</th><th>%</th></tr></thead>
+        <thead><tr><th>Показатель</th><th>План</th><th>Факт</th><th>Δ</th><th>%</th></tr></thead>
         <tbody id="tbody-today"></tbody>
       </table>
     </div>
@@ -464,11 +464,22 @@ function renderGauges(sv) {
 }
 
 function tr5(lbl, plan, fact, delta, pct, sub) {
-  const sg = (delta || 0) >= 0 ? '+' : '';
-  const dc = (delta || 0) >= 0 ? 'dpos' : 'dneg';
+  const d = delta || 0;
+  const dc = d >= 0 ? 'dpos' : 'dneg';
+  let dStr;
+  if (typeof delta === 'number') {
+    const abs = Math.abs(d);
+    const sg = d >= 0 ? '+' : '−';
+    if (abs >= 1e6) dStr = sg + (abs / 1e6).toFixed(2) + ' млн ₽';
+    else if (abs >= 1e3) dStr = sg + Math.round(abs / 1e3) + ' тыс ₽';
+    else if (abs >= 1 && String(plan).includes('₽')) dStr = sg + Math.round(abs) + ' ₽';
+    else dStr = (d >= 0 ? '+' : '') + Math.round(d);
+  } else {
+    dStr = delta != null ? String(delta) : '—';
+  }
   return `<tr class="${sub ? 'sub-row' : ''}">
     <td>${lbl}</td><td>${plan}</td><td><strong>${fact}</strong></td>
-    <td><span class="${dc}">${sg}${delta}</span></td>
+    <td><span class="${dc}">${dStr}</span></td>
     <td><span class="badge ${bc(pct)}">${fP(pct)}</span></td></tr>`;
 }
 function tr4(lbl, plan, fact, pct) {
@@ -479,15 +490,15 @@ function tr4(lbl, plan, fact, pct) {
 function renderTables(sv) {
   const { m, mc, s, k, ch } = sv;
   document.getElementById('tbody-month').innerHTML =
-    tr5('Маржа ВСЕГО без НДС', fR(m.plan), fR(m.fact), fR(Math.abs(m.delta || 0)), m.pct) +
-    tr5('Обслужено машин', mc.plan || '—', mc.fact || '—', Math.abs(mc.delta || 0), mc.pct) +
-    tr5('· Собственные', s.plan || '—', s.fact || '—', '+' + Math.abs(s.delta || 0), s.pct, true) +
-    tr5('· Коммерция', k.plan || '—', k.fact || '—', k.delta || 0, k.pct, true) +
-    tr5('Средний чек без НДС', fR(ch.plan), fR(ch.fact), fR(Math.abs(ch.delta || 0)), ch.pct);
+    tr5('Маржа ВСЕГО без НДС', fR(m.plan), fR(m.fact), m.fact - m.plan, m.pct) +
+    tr5('Обслужено машин', mc.plan || '—', mc.fact || '—', (mc.fact || 0) - (mc.plan || 0), mc.pct) +
+    tr5('· Собственные', s.plan || '—', s.fact || '—', (s.fact || 0) - (s.plan || 0), s.pct, true) +
+    tr5('· Коммерция', k.plan || '—', k.fact || '—', (k.fact || 0) - (k.plan || 0), k.pct, true) +
+    tr5('Средний чек без НДС', fR(ch.plan), fR(ch.fact), ch.fact - ch.plan, ch.pct);
   document.getElementById('tbody-today').innerHTML =
-    tr4('Маржа ВСЕГО без НДС', fR(m.planT), fR(m.factT), m.pctT) +
-    tr4('Обслужено машин', (mc.planT || 0) + '', (mc.factT || 0) + '', mc.pctT) +
-    tr4('Средний чек без НДС', fR(ch.planT), fR(ch.factT), ch.pctT);
+    tr5('Маржа ВСЕГО без НДС', fR(m.planT), fR(m.factT), m.factT - m.planT, m.pctT) +
+    tr5('Обслужено машин', (mc.planT || 0) + '', (mc.factT || 0) + '', (mc.factT || 0) - (mc.planT || 0), mc.pctT) +
+    tr5('Средний чек без НДС', fR(ch.planT), fR(ch.factT), ch.factT - ch.planT, ch.pctT);
 }
 
 function renderPipeline(sv) {
