@@ -43,6 +43,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .setup-banner code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:12px;color:#f59e0b}
 /* ─── Section label ─── */
 .slabel{font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin:0 0 10px 2px}
+.slabel .stale{color:var(--accent);text-transform:none;letter-spacing:0;font-weight:600;margin-left:8px}
 /* ─── Gauges ─── */
 .gauge-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
 .gpanel{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:16px;text-align:center}
@@ -189,7 +190,7 @@ input:checked+.tslider::before{transform:translateX(14px);background:#000}
   <div class="slabel">Нарастающий итог · месяц</div>
   <div class="gauge-row" id="gauges-month"></div>
 
-  <div class="slabel">Сегодня</div>
+  <div class="slabel" id="slabel-today">Сегодня</div>
   <div class="gauge-row" id="gauges-today"></div>
 
   <div class="detail-row">
@@ -200,14 +201,14 @@ input:checked+.tslider::before{transform:translateX(14px);background:#000}
         <tbody id="tbody-month"></tbody>
       </table>
       <div class="divider"></div>
-      <div class="card-title">Сегодня</div>
+      <div class="card-title" id="title-today-detail">Сегодня</div>
       <table class="ctable">
         <thead><tr><th>Показатель</th><th>План</th><th>Факт</th><th>Δ</th><th>%</th></tr></thead>
         <tbody id="tbody-today"></tbody>
       </table>
     </div>
     <div class="card">
-      <div class="card-title">Пайплайн · прямо сейчас</div>
+      <div class="card-title" id="pipe-title">Пайплайн · прямо сейчас</div>
       <div id="pipeline"></div>
     </div>
   </div>
@@ -314,6 +315,23 @@ function parseCells(str, n) {
   return out;
 }
 
+// Полноценный разбор одной CSV-строки (учёт кавычек и экранированных кавычек)
+function splitCsvLine(line) {
+  const out = []; let i = 0, cur = '', q = false;
+  while (i < line.length) {
+    const ch = line[i];
+    if (q) {
+      if (ch === '"') { if (line[i + 1] === '"') { cur += '"'; i += 2; continue; } q = false; i++; continue; }
+      cur += ch; i++;
+    } else {
+      if (ch === '"') { q = true; i++; continue; }
+      if (ch === ',') { out.push(cur); cur = ''; i++; continue; }
+      cur += ch; i++;
+    }
+  }
+  out.push(cur); return out;
+}
+
 // ══════════════════════════════════════
 // SVOD PARSER (читает СВОД sheet CSV)
 // ══════════════════════════════════════
@@ -396,44 +414,98 @@ function parseDaily(raw) {
     sec = raw.slice(si, ei);
   }
 
-  const daysM = sec.match(/Кол-во дн,(\d+)/);
-  const numDays = daysM ? +daysM[1] : 31;
+  // Построчный разбор: лист → массив строк-ячеек (устойчиво к запятым/кавычкам в метках)
+  const lines = sec.split(/\r?\n/).map(splitCsvLine);
 
-  const miCars = sec.indexOf(',Обслужено машин,');
-  let dailyCars = [];
-  if (miCars >= 0) {
-    const after = sec.slice(miCars + ',Обслужено машин,'.length);
-    const cs = parseCells(after, 42);
-    for (let i = 5; i < cs.length; i++) {
-      const v = pN(cs[i]); dailyCars.push(v != null ? v : 0);
+  // Колонка первого дня — первая ячейка вида dd.mm (строка дат по дням)
+  let dayStart = -1;
+  for (const cells of lines) {
+    for (let c = 0; c < cells.length; c++) {
+      if (/^\d{2}\.\d{2}$/.test((cells[c] || '').trim())) { dayStart = c; break; }
     }
+    if (dayStart >= 0) break;
   }
 
-  // Маржа ВСЕГО без НДС — ищем и в concatenated (,,prefix) и в standalone CSV форматах
-  const marLabel = ',,Маржа ВСЕГО без НДС,';
-  const marLabel2 = 'Маржа ВСЕГО без НДС,'; // для standalone CSV без ведущих запятых
-  let miMar = sec.indexOf(marLabel);
-  let marOffset = marLabel.length;
-  if (miMar < 0) { miMar = sec.indexOf(marLabel2); marOffset = marLabel2.length; }
+  const daysM = sec.match(/Кол-во дн[,\s]+(\d+)/);
+  let numDays = daysM ? +daysM[1] : 0;
 
-  let dailyMargin = [];
-  let monthPlanMargin = null; // Полный план месяца — D12 = cs[0]
-
-  if (miMar >= 0) {
-    const after = sec.slice(miMar + marOffset);
-    const cs = parseCells(after, 42);
-    // cs[0] = план за весь месяц (столбец D в листе, ячейка D12)
-    monthPlanMargin = pN(cs[0]);
-    // cs[5..] = суточные значения факта
-    for (let i = 5; i < cs.length; i++) {
-      const v = pN(cs[i]); dailyMargin.push(v != null ? v : 0);
+  // Поиск строки показателя по точной метке (в одной из первых 5 колонок)
+  function findRow() {
+    const labs = arguments;
+    for (const cells of lines) {
+      for (let c = 0; c < 5; c++) {
+        const cell = (cells[c] || '').trim();
+        for (let a = 0; a < labs.length; a++) if (cell === labs[a]) return { cells, labelCol: c };
+      }
     }
+    return null;
+  }
+  function planOf(row) { return row ? pN(row.cells[row.labelCol + 1]) : null; }   // план месяца = D (сразу после метки)
+  function daysOf(row) {
+    if (!row || dayStart < 0) return [];
+    const a = [];
+    for (let c = dayStart; c < row.cells.length; c++) { const v = pN(row.cells[c]); a.push(v != null ? v : 0); }
+    while (a.length && a[a.length - 1] === 0) a.pop();
+    return a;
   }
 
-  while (dailyMargin.length && dailyMargin[dailyMargin.length - 1] === 0) dailyMargin.pop();
-  while (dailyCars.length && dailyCars[dailyCars.length - 1] === 0) dailyCars.pop();
+  const rMar  = findRow('Маржа ВСЕГО без НДС');
+  const rCar  = findRow('Обслужено машин');
+  const rOwn  = findRow('собственные', '- собственные');
+  const rCom  = findRow('коммерция', '- коммерция');
+  const rChk  = findRow('Ср чек без НДС');
+  const rWSht = findRow('В работе, шт');
+  const rWRub = findRow('В работе, ₽');
+  const rSSht = findRow('На согласовании, шт');
+  const rSRub = findRow('На согласовании, ₽');
+  const rQSht = findRow('В очереди, шт');
 
-  return { numDays, dailyMargin, dailyCars, monthPlanMargin };
+  const dailyMargin = daysOf(rMar);
+  const dailyCars   = daysOf(rCar);
+  const monthPlanMargin = planOf(rMar);
+  if (!numDays) numDays = dailyMargin.length || 30;
+
+  // Последний заполненный день (маржа ≠ 0 → день закрыт/заполнен)
+  const lastIdx = dailyMargin.length - 1;
+  const dayAt = row => (row && dayStart >= 0 && lastIdx >= 0 ? pN(row.cells[dayStart + lastIdx]) : null);
+  let lastDay = null;
+  if (lastIdx >= 0) {
+    lastDay = {
+      dayNum: lastIdx + 1,
+      mach: dayAt(rCar), own: dayAt(rOwn), comm: dayAt(rCom),
+      margNoVat: dailyMargin[lastIdx], check: dayAt(rChk),
+      workSht: dayAt(rWSht) || 0, workRub: dayAt(rWRub) || 0,
+      soglSht: dayAt(rSSht) || 0, soglRub: dayAt(rSRub) || 0,
+      queueSht: dayAt(rQSht) || 0,
+    };
+  }
+
+  return { numDays, dailyMargin, dailyCars, monthPlanMargin, lastDay };
+}
+
+// ══════════════════════════════════════
+// FALLBACK: «Сегодня» и «Пайплайн» держат последний заполненный день,
+// пока за текущие сутки данные не загружены.
+// ══════════════════════════════════════
+function applyTodayFallback(sv, daily) {
+  if (!daily || !daily.lastDay) return;
+  const ld = daily.lastDay;
+
+  // Сегодня пусто, если факт маржи за сегодня (из СВОД) ещё не пришёл.
+  // Тогда «Сегодня» и «Пайплайн» держат последний заполненный день (вчера).
+  const todayEmpty = sv.m.factT == null || sv.m.factT === 0;
+  if (todayEmpty) {
+    sv.m.factT = ld.margNoVat;
+    sv.m.pctT  = (sv.m.planT && sv.m.planT > 0) ? sv.m.factT / sv.m.planT * 100 : null;
+    if (ld.mach != null)  { sv.mc.factT = ld.mach;  sv.mc.pctT = (sv.mc.planT && sv.mc.planT > 0) ? sv.mc.factT / sv.mc.planT * 100 : null; }
+    if (ld.check != null) { sv.ch.factT = ld.check; sv.ch.pctT = (sv.ch.planT && sv.ch.planT > 0) ? sv.ch.factT / sv.ch.planT * 100 : null; }
+    sv.pipe = {
+      workSht: ld.workSht, workRub: ld.workRub,
+      soglSht: ld.soglSht, soglRub: ld.soglRub,
+      queueSht: ld.queueSht,
+    };
+    sv.todayFallbackDay = ld.dayNum;
+  }
 }
 
 // ══════════════════════════════════════
@@ -600,7 +672,7 @@ function renderComparison(sv, daily) {
     ? `Осталось до плана: <strong style="color:${planCol}">${fR(toPlan)}</strong>`
     : `<strong style="color:#22c55e">✓ План выполнен · +${fR(Math.abs(toPlan))}</strong>`;
   const card3 = `<div class="cmp-card">
-    <div class="cmp-label">Выполнение плана · май</div>
+    <div class="cmp-label">Выполнение плана · ${(sv.period||'месяц')}</div>
     <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
       <div class="plan-big" style="color:${planCol}">${fP(pctDone)}</div>
       <div style="font-size:12px;color:var(--muted)">от плана ${fR(mayPlan)}</div>
@@ -629,13 +701,13 @@ function renderComparison(sv, daily) {
 
   document.getElementById('cmp-row').innerHTML =
     cmpCard(
-      `Май (1–${dayNum}) vs Апрель (весь месяц)`,
-      mayFact, `Май нарастающий (${dayNum} дн.)`,
+      `Текущий (1–${dayNum}) vs Апрель (весь месяц)`,
+      mayFact, `Текущий нарастающий (${dayNum} дн.)`,
       HIST.apr.fact, 'Апрель · итог месяца', true
     ) +
     cmpCard(
-      `Май (1–${dayNum}) vs Апрель (1–${dayNum})`,
-      mayFact, `Май нарастающий`,
+      `Текущий (1–${dayNum}) vs Апрель (1–${dayNum})`,
+      mayFact, `Текущий нарастающий`,
       aprToSameDay, `Апрель до ${dayNum}-го числа`, true
     ) +
     card3;
@@ -898,6 +970,9 @@ async function load() {
     // Если daily не получили из отдельного листа — пробуем из СВОД CSV
     const daily2 = daily || (svodCsv.indexOf('ФинРез По суткам') >= 0 ? parseDaily(svodCsv) : null);
 
+    // Fallback: «Сегодня» и «Пайплайн» держат последний заполненный день, пока сегодня пусто
+    applyTodayFallback(sv, daily2);
+
     const per = sv.period;
     document.getElementById('h-period').textContent = (per ? per.charAt(0).toUpperCase() + per.slice(1) : '—') + ' 2026';
     document.getElementById('h-date').textContent = 'Данные на ' + (sv.date || new Date().toLocaleDateString('ru'));
@@ -908,6 +983,21 @@ async function load() {
     renderComparison(sv, daily2);
     renderMonthly(sv, daily2);
     if (daily2) renderDaily(daily2, sv);
+
+    // Пометки fallback (показан прошлый день, ждём сегодняшние данные)
+    const slabelToday = document.getElementById('slabel-today');
+    const titleToday  = document.getElementById('title-today-detail');
+    const pipeTitle   = document.getElementById('pipe-title');
+    if (sv.todayFallbackDay) {
+      const tag = ` <span class="stale">⏳ ждём сегодня · показан ${sv.todayFallbackDay}-й день</span>`;
+      if (slabelToday) slabelToday.innerHTML = 'Сегодня' + tag;
+      if (titleToday)  titleToday.innerHTML  = `Сегодня <span style="color:#f59e0b;font-weight:600">(данные за ${sv.todayFallbackDay}-й день)</span>`;
+      if (pipeTitle)   pipeTitle.innerHTML   = `Пайплайн · на ${sv.todayFallbackDay}-й день <span style="color:#f59e0b;font-size:10px">(ждём сегодня)</span>`;
+    } else {
+      if (slabelToday) slabelToday.textContent = 'Сегодня';
+      if (titleToday)  titleToday.textContent  = 'Сегодня';
+      if (pipeTitle)   pipeTitle.textContent   = 'Пайплайн · прямо сейчас';
+    }
 
     document.getElementById('loading').style.display = 'none';
     document.getElementById('app').style.display = 'block';
