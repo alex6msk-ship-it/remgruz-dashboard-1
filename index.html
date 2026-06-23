@@ -1106,6 +1106,13 @@ async function load() {
     document.getElementById('h-period').textContent = (per ? per.charAt(0).toUpperCase() + per.slice(1) : '—') + ' 2026';
     document.getElementById('h-date').textContent = 'Данные на ' + (sv.date || new Date().toLocaleDateString('ru'));
 
+    // ВАЖНО: сначала показываем контейнер, потом строим графики. Иначе Chart.js
+    // создаётся в скрытом блоке (display:none) нулевой ширины и схлопывается в полоску
+    // — особенно в grid-сетке «Динамика по месяцам».
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('setup-banner').style.display = 'none';
+
     renderGauges(sv);
     renderTables(sv);
     renderPipeline(sv);
@@ -1128,9 +1135,8 @@ async function load() {
       if (pipeTitle)   pipeTitle.textContent   = 'Пайплайн · прямо сейчас';
     }
 
-    document.getElementById('loading').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    document.getElementById('setup-banner').style.display = 'none';
+    // Подстраховка: после layout переразмерить графики под реальную ширину контейнеров
+    requestAnimationFrame(() => { ['m', 'c', 'd'].forEach(k => { if (CH[k] && CH[k].resize) CH[k].resize(); }); });
 
     if (document.getElementById('autoRefreshToggle').checked) startCountdown();
 
