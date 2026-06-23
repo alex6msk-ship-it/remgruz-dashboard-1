@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RemGruz #1 — СВОД · концепт</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cyan:#00eaff; --orange:#ff7a1a; --green:#22ffa0; --red:#ff3b6b; --purple:#b14bff; --blue:#3b9dff;
+  --txt:#e8f4ff; --muted:#7d93b8; --dim:#4a5d7e;
+  --glass:rgba(16,28,52,.55); --glass-brd:rgba(90,160,255,.18);
+}
+body{
+  font-family:'Rajdhani',sans-serif;color:var(--txt);min-height:100vh;padding:22px;
+  background:
+    radial-gradient(1200px 700px at 18% -10%, rgba(0,160,255,.10), transparent 60%),
+    radial-gradient(1000px 600px at 100% 0%, rgba(177,75,255,.10), transparent 55%),
+    radial-gradient(900px 700px at 50% 120%, rgba(255,122,26,.08), transparent 60%),
+    #05070f;
+  background-attachment:fixed;
+}
+.grid-bg{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.4;
+  background-image:linear-gradient(rgba(60,120,200,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(60,120,200,.06) 1px,transparent 1px);
+  background-size:44px 44px;mask:radial-gradient(circle at 50% 30%,#000 0%,transparent 80%)}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto}
+.num{font-family:'Orbitron',sans-serif;font-variant-numeric:tabular-nums}
+
+/* HEADER */
+.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;padding:16px 22px;
+  background:var(--glass);border:1px solid var(--glass-brd);border-radius:18px;backdrop-filter:blur(14px);
+  box-shadow:0 0 40px rgba(0,160,255,.06),inset 0 1px 0 rgba(255,255,255,.04)}
+.hlogo{display:flex;align-items:center;gap:14px}
+.hlogo img{width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(0,200,255,.45))}
+.htitle h1{font-family:'Orbitron',sans-serif;font-size:19px;font-weight:800;letter-spacing:.06em;
+  background:linear-gradient(90deg,#fff,#9fe3ff);-webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 22px rgba(0,200,255,.25)}
+.htitle p{font-size:13px;color:var(--muted);margin-top:3px;letter-spacing:.12em;text-transform:uppercase;font-weight:500}
+.hstatus{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 12px var(--green),0 0 22px var(--green);animation:pulse 1.8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.hbtn{font-family:'Rajdhani';font-weight:600;letter-spacing:.08em;text-transform:uppercase;font-size:12px;
+  padding:9px 16px;border-radius:11px;color:var(--cyan);cursor:pointer;
+  background:rgba(0,200,255,.06);border:1px solid rgba(0,200,255,.32);box-shadow:0 0 18px rgba(0,200,255,.12)}
+
+/* SECTION LABEL */
+.slabel{font-family:'Orbitron';font-size:11px;letter-spacing:.22em;text-transform:uppercase;font-weight:600;
+  color:var(--cyan);margin:0 0 14px 4px;display:flex;align-items:center;gap:10px}
+.slabel::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(0,200,255,.35),transparent)}
+
+/* KPI GAUGES */
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+.kpi{position:relative;padding:20px;border-radius:18px;text-align:center;overflow:hidden;
+  background:var(--glass);border:1px solid var(--glass-brd);backdrop-filter:blur(14px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.kpi.cyan{border-color:rgba(0,234,255,.34);box-shadow:0 0 34px rgba(0,234,255,.13),inset 0 1px 0 rgba(255,255,255,.05)}
+.kpi.green{border-color:rgba(34,255,160,.34);box-shadow:0 0 34px rgba(34,255,160,.13),inset 0 1px 0 rgba(255,255,255,.05)}
+.kpi.orange{border-color:rgba(255,122,26,.36);box-shadow:0 0 34px rgba(255,122,26,.14),inset 0 1px 0 rgba(255,255,255,.05)}
+.kpi-t{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:16px}
+.ring{width:118px;height:118px;border-radius:50%;margin:0 auto 14px;position:relative;display:flex;align-items:center;justify-content:center}
+.ring::before{content:'';position:absolute;inset:13px;border-radius:50%;background:#070b16;box-shadow:inset 0 0 18px rgba(0,0,0,.7)}
+.ring.cyan{box-shadow:0 0 26px rgba(0,234,255,.35)}
+.ring.green{box-shadow:0 0 26px rgba(34,255,160,.35)}
+.ring.orange{box-shadow:0 0 26px rgba(255,122,26,.4)}
+.ring-in{position:relative;z-index:1;text-align:center}
+.ring-pct{font-family:'Orbitron';font-size:25px;font-weight:800;line-height:1}
+.ring-lbl{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-top:3px}
+.kpi-fact{font-family:'Orbitron';font-size:21px;font-weight:700;letter-spacing:.02em}
+.kpi-plan{font-size:13px;color:var(--dim);margin-top:3px;letter-spacing:.06em}
+.t-cyan{color:var(--cyan);text-shadow:0 0 16px rgba(0,234,255,.6)}
+.t-green{color:var(--green);text-shadow:0 0 16px rgba(34,255,160,.55)}
+.t-orange{color:var(--orange);text-shadow:0 0 16px rgba(255,122,26,.6)}
+.t-red{color:var(--red);text-shadow:0 0 16px rgba(255,59,107,.55)}
+
+/* COMPARISON */
+.cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+.cmp-card{padding:18px 20px;border-radius:18px;background:var(--glass);border:1px solid var(--glass-brd);
+  backdrop-filter:blur(14px);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.cmp-lbl{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:14px}
+.cmp-vs{display:flex;align-items:flex-end;gap:12px;margin-bottom:12px}
+.cmp-main{font-family:'Orbitron';font-size:27px;font-weight:800;line-height:1}
+.cmp-sub{font-size:13px;color:var(--muted);margin-top:5px;letter-spacing:.04em}
+.cmp-arrow{font-size:24px;line-height:1;padding-bottom:4px}
+.cmp-ref{font-family:'Orbitron';font-size:17px;font-weight:600;color:var(--muted)}
+.cmp-bar{height:6px;border-radius:4px;background:rgba(255,255,255,.06);overflow:hidden;margin:12px 0 10px}
+.cmp-fill{height:100%;border-radius:4px}
+.cmp-foot{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:600}
+.big{font-family:'Orbitron';font-size:46px;font-weight:900;line-height:1}
+
+/* CHART */
+.panel{padding:20px 22px;border-radius:18px;background:var(--glass);border:1px solid var(--glass-brd);
+  backdrop-filter:blur(14px);box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.panel-t{font-family:'Orbitron';font-size:14px;font-weight:600;letter-spacing:.04em;margin-bottom:3px}
+.panel-s{font-size:12px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px}
+.chart-box{position:relative;height:260px}
+.legend{display:flex;gap:18px;justify-content:flex-end;font-size:13px;color:var(--muted);margin-bottom:8px;letter-spacing:.04em}
+.legend span{display:flex;align-items:center;gap:7px}
+.lg-dot{width:11px;height:11px;border-radius:3px}
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="wrap">
+
+  <div class="hdr">
+    <div class="hlogo">
+      <img src="logo.png" alt="RemGruz #1">
+      <div class="htitle">
+        <h1>REMGRUZ #1 — СВОД</h1>
+        <p>Операционный дашборд · Июнь 2026</p>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:18px">
+      <div class="hstatus"><span class="dot"></span>Данные на 23.06.2026</div>
+      <div class="hbtn">↻ Обновить</div>
+    </div>
+  </div>
+
+  <div class="slabel">Нарастающий итог · месяц</div>
+  <div class="row3">
+    <div class="kpi cyan">
+      <div class="kpi-t">Маржа без НДС</div>
+      <div class="ring cyan" style="background:conic-gradient(var(--cyan) 0deg, var(--cyan) 221deg, rgba(0,234,255,.10) 221deg)">
+        <div class="ring-in"><div class="ring-pct t-cyan num">92%</div><div class="ring-lbl">план</div></div>
+      </div>
+      <div class="kpi-fact t-cyan num">5.68 млн ₽</div>
+      <div class="kpi-plan num">план 6.17 млн ₽</div>
+    </div>
+    <div class="kpi orange">
+      <div class="kpi-t">Обслужено машин</div>
+      <div class="ring orange" style="background:conic-gradient(var(--orange) 0deg, var(--orange) 182deg, rgba(255,122,26,.10) 182deg)">
+        <div class="ring-in"><div class="ring-pct t-orange num">76%</div><div class="ring-lbl">план</div></div>
+      </div>
+      <div class="kpi-fact t-orange num">157 шт</div>
+      <div class="kpi-plan num">план 207 шт</div>
+    </div>
+    <div class="kpi green">
+      <div class="kpi-t">Средний чек</div>
+      <div class="ring green" style="background:conic-gradient(var(--green) 0deg, var(--green) 305deg, rgba(34,255,160,.12) 305deg)">
+        <div class="ring-in"><div class="ring-pct t-green num">127%</div><div class="ring-lbl">план</div></div>
+      </div>
+      <div class="kpi-fact t-green num">44 тыс ₽</div>
+      <div class="kpi-plan num">план 35 тыс ₽</div>
+    </div>
+  </div>
+
+  <div class="slabel">Сравнительный анализ · маржа без НДС</div>
+  <div class="cmp">
+    <div class="cmp-card">
+      <div class="cmp-lbl">Июнь (1–23) vs Май · весь месяц</div>
+      <div class="cmp-vs">
+        <div><div class="cmp-main t-cyan num">5.68<span style="font-size:18px"> млн</span></div><div class="cmp-sub">Июнь · 23 дня</div></div>
+        <div class="cmp-arrow t-red">↓</div>
+        <div><div class="cmp-ref num">7.00 млн</div><div class="cmp-sub">Май · итог</div></div>
+      </div>
+      <div class="cmp-bar"><div class="cmp-fill" style="width:81%;background:var(--red);box-shadow:0 0 14px var(--red)"></div></div>
+      <div class="cmp-foot"><span class="t-red">−1.32 млн ₽</span><span class="t-red num">81%</span></div>
+    </div>
+    <div class="cmp-card">
+      <div class="cmp-lbl">Июнь (1–23) vs Май (1–23)</div>
+      <div class="cmp-vs">
+        <div><div class="cmp-main t-green num">5.68<span style="font-size:18px"> млн</span></div><div class="cmp-sub">Июнь · 23 дня</div></div>
+        <div class="cmp-arrow t-green">↑</div>
+        <div><div class="cmp-ref num">5.19 млн</div><div class="cmp-sub">Май · до 23-го</div></div>
+      </div>
+      <div class="cmp-bar"><div class="cmp-fill" style="width:100%;background:var(--green);box-shadow:0 0 14px var(--green)"></div></div>
+      <div class="cmp-foot"><span class="t-green">+484 тыс ₽</span><span class="t-green num">109%</span></div>
+    </div>
+    <div class="cmp-card" style="border-color:rgba(255,122,26,.32);box-shadow:0 0 30px rgba(255,122,26,.10),inset 0 1px 0 rgba(255,255,255,.05)">
+      <div class="cmp-lbl">Выполнение плана · Июнь</div>
+      <div class="big t-orange num">71%</div>
+      <div class="cmp-sub" style="margin:2px 0 12px">от плана 8.05 млн ₽</div>
+      <div class="cmp-bar"><div class="cmp-fill" style="width:71%;background:var(--orange);box-shadow:0 0 14px var(--orange)"></div></div>
+      <div class="cmp-foot" style="font-size:13px"><span style="color:var(--muted)">Прогноз: <span class="t-orange num">7.41 млн</span></span><span style="color:var(--muted)">Осталось: <span class="num" style="color:var(--txt)">7 дн</span></span></div>
+    </div>
+  </div>
+
+  <div class="slabel">Динамика по месяцам</div>
+  <div class="panel">
+    <div class="panel-t">Маржа без НДС · план vs факт</div>
+    <div class="panel-s">Январь – Июнь · текущий — нарастающим</div>
+    <div class="legend">
+      <span><span class="lg-dot" style="background:#2b3b5e"></span>План</span>
+      <span><span class="lg-dot" style="background:var(--cyan);box-shadow:0 0 8px var(--cyan)"></span>Факт</span>
+    </div>
+    <div class="chart-box"><canvas id="c" role="img" aria-label="Маржа без НДС по месяцам, январь-июнь"></canvas></div>
+  </div>
+
+</div>
+<script>
+const g=document.getElementById('c').getContext('2d');
+const glow={id:'glow',beforeDatasetsDraw(c){c.ctx.save();c.ctx.shadowColor='rgba(0,234,255,.7)';c.ctx.shadowBlur=16;},afterDatasetsDraw(c){c.ctx.restore();}};
+const grad=g.createLinearGradient(0,0,0,260);grad.addColorStop(0,'rgba(0,234,255,.45)');grad.addColorStop(1,'rgba(0,234,255,0)');
+new Chart(g,{type:'bar',plugins:[glow],
+ data:{labels:['Январь','Февраль','Март','Апрель','Май','Июнь*'],
+ datasets:[
+  {label:'План',data:[2.8,2.9,3.98,6.7,6.94,8.05],backgroundColor:'#1a2742',borderColor:'#33507f',borderWidth:1,borderRadius:6,categoryPercentage:.62,barPercentage:.84},
+  {label:'Факт',data:[2.75,2.77,4.41,5.15,7.0,5.68],backgroundColor:grad,borderColor:'#00eaff',borderWidth:2,borderRadius:6,categoryPercentage:.62,barPercentage:.84}
+ ]},
+ options:{responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.dataset.label+': '+c.raw.toFixed(2)+' млн ₽'}}},
+  scales:{
+   x:{grid:{color:'rgba(90,140,210,.08)'},ticks:{color:'#7d93b8',font:{family:'Rajdhani',size:13,weight:'600'}}},
+   y:{grid:{color:'rgba(90,140,210,.08)'},ticks:{color:'#5a6d8e',font:{family:'Orbitron',size:11},callback:v=>v+' млн'}}
+  }}
+});
+</script>
+</body>
+</html>
