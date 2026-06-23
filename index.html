@@ -220,12 +220,12 @@ input:checked+.tslider::before{transform:translateX(14px);background:#000}
   <div class="chart-row">
     <div class="card">
       <div class="ctitle">Маржа без НДС · план vs факт</div>
-      <div class="csub">Февраль – текущий период · план = итог месяца</div>
+      <div class="csub" id="csub-monthly">Динамика по месяцам · план = итог месяца, текущий — нарастающим</div>
       <canvas id="cMonthly" height="195"></canvas>
     </div>
     <div class="card">
       <div class="ctitle">Средний чек без НДС</div>
-      <div class="csub">Динамика по месяцам</div>
+      <div class="csub" id="csub-check">Динамика по месяцам</div>
       <canvas id="cCheck" height="195"></canvas>
     </div>
   </div>
@@ -266,6 +266,49 @@ const PROXIES = [
   u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
   u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
 ];
+
+// ══════════════════════════════════════
+// ИСТОРИЯ ПО МЕСЯЦАМ (факт закрытых месяцев — источник: лист «ФинРез по мес»)
+// ВАЖНО: текущий месяц СЮДА НЕ вносим — он всегда берётся live из листа СВОД.
+// Когда месяц закрылся, добавь его одной строкой (или это сделает авто-обновление).
+// marFact / marPlan — Маржа ВСЕГО без НДС; chkFact / chkPlan — Ср чек без НДС; mach — обслужено машин.
+// ══════════════════════════════════════
+const RU_MONTHS = ['', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+const MONTHLY_HISTORY = [
+  { ym: '2026-02', marFact: 2768060, marPlan: 2904000, chkFact: 24281, chkPlan: 24000, mach: 147 },
+  { ym: '2026-03', marFact: 4410059, marPlan: 3978000, chkFact: 32190, chkPlan: 26000, mach: 178 },
+  { ym: '2026-04', marFact: 5151935, marPlan: 6699000, chkFact: 32402, chkPlan: 29000, mach: 206 },
+  { ym: '2026-05', marFact: 6999978, marPlan: 6944902, chkFact: 40698, chkPlan: 29000, mach: 223 },
+];
+// Сколько закрытых месяцев показывать на графике (+ текущий). Скользящее окно.
+const MONTHLY_WINDOW = 5;
+
+function monthName(m) { return RU_MONTHS[m] || ('мес ' + m); }
+function ymKey(y, m) { return y + '-' + String(m).padStart(2, '0'); }
+function daysInMonthOf(y, m) { return new Date(y, m, 0).getDate(); }
+
+// Текущий год/месяц — из даты листа СВОД (формат M/D/YYYY), иначе системная дата
+function currentYM(sv) {
+  if (sv && sv.date) {
+    const p = sv.date.split('/');
+    if (p.length >= 3) { const m = +p[0], y = +p[2]; if (m >= 1 && m <= 12 && y > 2000) return { y, m }; }
+  }
+  const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() + 1 };
+}
+// День месяца — из даты листа СВОД, иначе системный
+function currentDay(sv) {
+  if (sv && sv.date) { const p = sv.date.split('/'); if (p.length >= 2) { const d = +p[1]; if (d >= 1 && d <= 31) return d; } }
+  return new Date().getDate();
+}
+// Запись предыдущего завершённого месяца относительно текущего
+function prevMonthRec(cur) {
+  let py = cur.y, pm = cur.m - 1; if (pm < 1) { pm = 12; py--; }
+  const exact = MONTHLY_HISTORY.find(r => r.ym === ymKey(py, pm));
+  if (exact) return { rec: exact, y: py, m: pm };
+  const last = MONTHLY_HISTORY[MONTHLY_HISTORY.length - 1];
+  if (last) { const a = last.ym.split('-'); return { rec: last, y: +a[0], m: +a[1] }; }
+  return null;
+}
 
 // ══════════════════════════════════════
 // HELPERS
@@ -605,36 +648,31 @@ function renderPipeline(sv) {
 
 // ══════════════════════════════════════
 // COMPARISON CARDS
+// Текущий месяц (live, нарастающим) vs предыдущий завершённый (из MONTHLY_HISTORY).
+// Всё вычисляется от даты листа СВОД — при смене месяца сдвигается само.
 // ══════════════════════════════════════
 function renderComparison(sv, daily) {
-  // Исторические данные (зафиксированы)
-  const HIST = {
-    apr: { fact: 5177902, plan: 6699000, days: 30 },
-    mar: { fact: 4431960, plan: 3978000, days: 31 },
-  };
+  const cur = currentYM(sv);
+  const dayNum = currentDay(sv);
+  const daysInMonth = daysInMonthOf(cur.y, cur.m);
+  const daysLeft = Math.max(0, daysInMonth - dayNum);
+  const curName = monthName(cur.m);
 
-  const mayFact  = sv.m.fact  || 0;
+  const curFact = sv.m.fact || 0;
   // Полный план месяца — из D12 листа ФинРез По суткам (если есть), иначе из СВОД
-  const mayPlan  = (daily && daily.monthPlanMargin) ? daily.monthPlanMargin : (sv.m.plan || 0);
-  const mayPlanT = sv.m.planT || 0;
-  const mayFactT = sv.m.factT || 0;
+  const curPlan = (daily && daily.monthPlanMargin) ? daily.monthPlanMargin : (sv.m.plan || 0);
 
-  // Определяем день месяца из sv.date (формат "5/25/2026")
-  let dayNum = new Date().getDate();
-  if (sv.date) {
-    const p = sv.date.split('/');
-    if (p.length >= 2) dayNum = parseInt(p[1]) || dayNum;
-  }
-  const daysInMonth = 31; // май
-  const daysLeft    = daysInMonth - dayNum;
-
-  // Апрель нарастающий до того же числа (апрель: 30 дней)
-  const aprToSameDay = Math.round(HIST.apr.fact / HIST.apr.days * dayNum);
+  // Предыдущий завершённый месяц
+  const prev = prevMonthRec(cur);
+  const prevFact = prev ? (prev.rec.marFact || 0) : 0;
+  const prevName = prev ? monthName(prev.m) : '—';
+  const prevDays = prev ? daysInMonthOf(prev.y, prev.m) : 30;
+  const prevToSameDay = prevFact > 0 ? Math.round(prevFact / prevDays * dayNum) : 0;
 
   // Проекция конца месяца (при текущем темпе)
-  const dailyAvg   = dayNum > 0 ? mayFact / dayNum : 0;
-  const projected  = Math.round(mayFact + dailyAvg * daysLeft);
-  const projVsPlan = mayPlan > 0 ? projected / mayPlan * 100 : null;
+  const dailyAvg  = dayNum > 0 ? curFact / dayNum : 0;
+  const projected = Math.round(curFact + dailyAvg * daysLeft);
+  const projVsPlan = curPlan > 0 ? projected / curPlan * 100 : null;
 
   function cmpCard(label, mainVal, mainLbl, refVal, refLbl, showBar) {
     const ratio = refVal > 0 ? mainVal / refVal * 100 : null;
@@ -664,24 +702,24 @@ function renderComparison(sv, daily) {
   }
 
   // Карточка 3 — Выполнение плана + проекция
-  const pctDone   = mayPlan > 0 ? mayFact / mayPlan * 100 : null;
+  const pctDone   = curPlan > 0 ? curFact / curPlan * 100 : null;
   const planCol   = cH(pctDone);
   const planBar   = Math.min(100, pctDone || 0);
-  const toPlan    = mayPlan - mayFact; // сколько ещё нужно до плана (минус = перевыполнен)
+  const toPlan    = curPlan - curFact; // сколько ещё нужно до плана (минус = перевыполнен)
   const toPlanHtml = toPlan > 0
     ? `Осталось до плана: <strong style="color:${planCol}">${fR(toPlan)}</strong>`
     : `<strong style="color:#22c55e">✓ План выполнен · +${fR(Math.abs(toPlan))}</strong>`;
   const card3 = `<div class="cmp-card">
-    <div class="cmp-label">Выполнение плана · ${(sv.period||'месяц')}</div>
+    <div class="cmp-label">Выполнение плана · ${curName}</div>
     <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
       <div class="plan-big" style="color:${planCol}">${fP(pctDone)}</div>
-      <div style="font-size:12px;color:var(--muted)">от плана ${fR(mayPlan)}</div>
+      <div style="font-size:12px;color:var(--muted)">от плана ${fR(curPlan)}</div>
     </div>
     <div class="cmp-bar-wrap" style="margin:6px 0 10px">
       <div class="cmp-bar" style="width:${planBar}%;background:${planCol}"></div>
     </div>
     <div style="font-size:11px;color:var(--muted);margin-bottom:6px">
-      Факт: <strong style="color:${planCol}">${fR(mayFact)}</strong>
+      Факт: <strong style="color:${planCol}">${fR(curFact)}</strong>
       &nbsp;·&nbsp; Осталось дней: <strong>${daysLeft}</strong>
     </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:10px;padding:6px 8px;background:var(--bg3);border-radius:7px">
@@ -701,28 +739,42 @@ function renderComparison(sv, daily) {
 
   document.getElementById('cmp-row').innerHTML =
     cmpCard(
-      `Текущий (1–${dayNum}) vs Апрель (весь месяц)`,
-      mayFact, `Текущий нарастающий (${dayNum} дн.)`,
-      HIST.apr.fact, 'Апрель · итог месяца', true
+      `${curName} (1–${dayNum}) vs ${prevName} (весь месяц)`,
+      curFact, `${curName} нарастающий (${dayNum} дн.)`,
+      prevFact, `${prevName} · итог месяца`, true
     ) +
     cmpCard(
-      `Текущий (1–${dayNum}) vs Апрель (1–${dayNum})`,
-      mayFact, `Текущий нарастающий`,
-      aprToSameDay, `Апрель до ${dayNum}-го числа`, true
+      `${curName} (1–${dayNum}) vs ${prevName} (1–${dayNum})`,
+      curFact, `${curName} нарастающий`,
+      prevToSameDay, `${prevName} до ${dayNum}-го числа`, true
     ) +
     card3;
 }
 
+// ══════════════════════════════════════
+// MONTHLY CHARTS
+// Скользящее окно: последние MONTHLY_WINDOW закрытых месяцев (из истории) + текущий (live).
+// Новый закрытый месяц появляется сам, как только попадёт в MONTHLY_HISTORY.
+// ══════════════════════════════════════
 function renderMonthly(sv, daily) {
-  const months = ['Февраль', 'Март', 'Апрель', 'Текущий*'];
-  // План текущего месяца — ИТОГОВЫЙ план на месяц (не нарастающий на сегодня).
-  // Берём полный план месяца из ФинРез По суткам (D12); если нет — нарастающий из СВОД.
+  const cur = currentYM(sv);
+  const curName = monthName(cur.m);
+  // План текущего месяца — ИТОГОВЫЙ план (не нарастающий). D12 листа ФинРез По суткам; иначе СВОД.
   const fullPlan = (daily && daily.monthPlanMargin) ? daily.monthPlanMargin : (sv.m.plan || 0);
-  const pM = [2904000, 3978000, 6699000, fullPlan];
-  const fM = [2791281, 4431960, 5177902, sv.m.fact || 0];
-  const pC = [24000, 26000, 29000, sv.ch.plan || 29000];
-  const fC = [25331, 32829, 33406, sv.ch.fact || 0];
+
+  // Последние закрытые месяцы + текущий
+  const closed = MONTHLY_HISTORY.slice(-MONTHLY_WINDOW);
+  const lastChkPlan = closed.length ? (closed[closed.length - 1].chkPlan || 0) : 0;
+
+  const months = closed.map(r => monthName(+r.ym.split('-')[1])).concat(curName + '*');
+  const pM = closed.map(r => r.marPlan || 0).concat(fullPlan);
+  const fM = closed.map(r => r.marFact || 0).concat(sv.m.fact || 0);
+  const pC = closed.map(r => r.chkPlan || 0).concat(sv.ch.plan || lastChkPlan);
+  const fC = closed.map(r => r.chkFact || 0).concat(sv.ch.fact || 0);
   const pts = pM.map((p, i) => p > 0 ? fM[i] / p : null);
+
+  const subM = document.getElementById('csub-monthly');
+  if (subM && months.length) subM.textContent = `${months[0]} – ${curName} · план = итог месяца, текущий — нарастающим`;
 
   if (CH.m) CH.m.destroy();
   CH.m = new Chart(document.getElementById('cMonthly'), {
