@@ -74,7 +74,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .dpos{color:#4ade80;font-size:10px}
 .dneg{color:#f87171;font-size:10px}
 .sub-row td{background:var(--bg3)}
-.sub-row td:first-child{padding-left:18px;font-size:10px;color:#64748b}
+.sub-row td:first-child{padding-left:18px;font-size:10px;color:#94a3b8}
 /* ─── Pipeline ─── */
 .pipe-item{padding:10px 0;border-bottom:1px solid var(--bg3)}
 .pipe-item:last-of-type{border-bottom:none}
@@ -95,7 +95,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 /* ─── Charts ─── */
 .chart-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
 .ctitle{font-size:12px;font-weight:600;color:var(--muted)}
-.csub{font-size:10px;color:#475569;margin:2px 0 12px}
+.csub{font-size:10px;color:#8a9bb5;margin:2px 0 12px}
 canvas{max-width:100%}
 /* ─── Daily ─── */
 .daily-stats{display:flex;gap:14px;flex-wrap:wrap;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;margin-bottom:14px}
@@ -135,7 +135,30 @@ input:checked+.tslider::before{transform:translateX(14px);background:#000}
 .plan-sub{font-size:11px;color:var(--muted);margin-top:4px}
 .proj-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--bg3)}
 /* ─── Responsive ─── */
-@media(max-width:700px){.gauge-row,.detail-row,.chart-row,.cmp-row{grid-template-columns:1fr}.hright{flex-direction:column;align-items:flex-end;gap:6px}}
+/* Планшет: графики и детализация в один столбец, сравнение в два */
+@media(max-width:980px){.chart-row,.detail-row{grid-template-columns:1fr}.cmp-row{grid-template-columns:1fr 1fr}}
+/* Телефон: всё в один столбец, компактнее отступы */
+@media(max-width:680px){
+  body{padding:11px}
+  .gauge-row,.cmp-row{grid-template-columns:1fr}
+  .hright{flex-direction:column;align-items:flex-end;gap:6px}
+  .hdr{padding:12px 14px;border-radius:12px}
+  .card{padding:14px}
+  .gpanel{padding:14px}
+  .slabel{margin-bottom:8px}
+}
+/* Узкий телефон: ужимаем крупные числа и таблицы */
+@media(max-width:430px){
+  .htitle h1{font-size:15px}
+  .htitle p{font-size:10px}
+  .ctable th,.ctable td{padding:6px 4px}
+  .ctable td{font-size:10px}
+  .ctable th{font-size:8px}
+  .plan-big{font-size:34px}
+  .cmp-main-val{font-size:18px}
+  .gauge{width:84px;height:84px}
+  .pcount{font-size:21px}
+}
 </style>
 </head>
 <body>
@@ -651,7 +674,7 @@ function gauge(pct, fact, plan) {
       <div class="gauge-lbl">план</div>
     </div>
   </div>
-  <div class="gauge-vals"><span class="gauge-fact" style="color:${col}">${fact}</span><br><span style="color:#475569;font-size:10px">${plan}</span></div>`;
+  <div class="gauge-vals"><span class="gauge-fact" style="color:${col}">${fact}</span><br><span style="color:#94a3b8;font-size:10px">${plan}</span></div>`;
 }
 function gp(title, inner) { return `<div class="gpanel"><div class="gpanel-title">${title}</div>${inner}</div>`; }
 
