@@ -258,6 +258,10 @@ function pubUrl(gid) {
 function directUrl(gid) {
   return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
 }
+// gviz-экспорт листа по ИМЕНИ (не нужен gid) — для листа помесячной истории
+function gvizCsvUrl(sheetName) {
+  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
+}
 
 // Прокси как запасной вариант
 const PROXIES = [
@@ -283,6 +287,30 @@ const MONTHLY_HISTORY = [
 // Сколько закрытых месяцев показывать на графике (+ текущий). Скользящее окно.
 const MONTHLY_WINDOW = 5;
 
+// Лист помесячной истории в той же книге. Дашборд читает его в рантайме и сам
+// подхватывает каждый новый закрытый месяц — править код больше не нужно.
+// Если лист недоступен/не распознан — остаётся встроенный MONTHLY_HISTORY (резерв).
+const SHEET_HISTORY = 'ФинРез по мес';
+let ACTIVE_HISTORY = MONTHLY_HISTORY.slice();
+const MON_ABBR = { 'янв': 1, 'фев': 2, 'мар': 3, 'апр': 4, 'май': 5, 'июн': 6, 'июл': 7, 'авг': 8, 'сен': 9, 'окт': 10, 'ноя': 11, 'дек': 12 };
+// "Май’26 План" / "Сен’25" → "2026-05"
+function parseYm(label) {
+  const t = String(label || '').toLowerCase();
+  const mm = t.match(/(янв|фев|мар|апр|май|июн|июл|авг|сен|окт|ноя|дек)/);
+  const yy = t.match(/(\d{2})/);
+  if (!mm || !yy) return null;
+  return (2000 + parseInt(yy[1])) + '-' + String(MON_ABBR[mm[1]]).padStart(2, '0');
+}
+// Закрытые месяцы (строго до текущего, с фактом) из активной истории, по возрастанию
+function closedMonths(cur) {
+  return ACTIVE_HISTORY.filter(r => {
+    if (!r.ym) return false;
+    const a = r.ym.split('-'), y = +a[0], mo = +a[1];
+    const past = (y < cur.y) || (y === cur.y && mo < cur.m);
+    return past && r.marFact != null && r.marFact > 0;
+  }).sort((a, b) => a.ym < b.ym ? -1 : 1);
+}
+
 function monthName(m) { return RU_MONTHS[m] || ('мес ' + m); }
 function ymKey(y, m) { return y + '-' + String(m).padStart(2, '0'); }
 function daysInMonthOf(y, m) { return new Date(y, m, 0).getDate(); }
@@ -300,13 +328,13 @@ function currentDay(sv) {
   if (sv && sv.date) { const p = sv.date.split('/'); if (p.length >= 2) { const d = +p[1]; if (d >= 1 && d <= 31) return d; } }
   return new Date().getDate();
 }
-// Запись предыдущего завершённого месяца относительно текущего
+// Запись предыдущего завершённого месяца относительно текущего (из активной истории)
 function prevMonthRec(cur) {
+  const cl = closedMonths(cur);
   let py = cur.y, pm = cur.m - 1; if (pm < 1) { pm = 12; py--; }
-  const exact = MONTHLY_HISTORY.find(r => r.ym === ymKey(py, pm));
-  if (exact) return { rec: exact, y: py, m: pm };
-  const last = MONTHLY_HISTORY[MONTHLY_HISTORY.length - 1];
-  if (last) { const a = last.ym.split('-'); return { rec: last, y: +a[0], m: +a[1] }; }
+  const exact = cl.find(r => r.ym === ymKey(py, pm));
+  const rec = exact || cl[cl.length - 1];
+  if (rec) { const a = rec.ym.split('-'); return { rec, y: +a[0], m: +a[1] }; }
   return null;
 }
 
@@ -527,6 +555,46 @@ function parseDaily(raw) {
 }
 
 // ══════════════════════════════════════
+// MONTHLY HISTORY PARSER (лист «ФинРез по мес»: помесячный план/факт)
+// gviz CSV: шапка тройками "Мес’ГГ План","Факт","Вып%"; значения вида "1 234 567 ₽".
+// Возвращает массив { ym, marFact, marPlan, chkFact, chkPlan, mach } по месяцам с данными.
+// ══════════════════════════════════════
+function parseMonthlyHistory(raw) {
+  const lines = (raw || '').split(/\r?\n/).map(splitCsvLine);
+  if (lines.length < 2) return null;
+  const hdr = lines[0];
+  const months = [];
+  for (let i = 1; i < hdr.length; i += 3) months.push({ ym: parseYm(hdr[i]), planCol: i, factCol: i + 1 });
+  const num = s => {
+    if (s == null) return null;
+    s = String(s).replace(/[ \s₽"'%]/g, '').replace(/,/g, '');
+    if (s === '') return null;
+    const n = parseFloat(s); return isNaN(n) ? null : n;
+  };
+  const rowExact = lbl => lines.find(r => (r[0] || '').trim() === lbl);
+  const rMar = rowExact('Маржа ВСЕГО без НДС');
+  const rChk = rowExact('Ср чек без НДС');
+  const rMach = rowExact('Обслужено машин');
+  if (!rMar) return null;
+  const out = [];
+  for (const mo of months) {
+    if (!mo.ym) continue;
+    const marFact = num(rMar[mo.factCol]);
+    const marPlan = num(rMar[mo.planCol]);
+    if (marFact == null && marPlan == null) continue;
+    // защита от опечаток/битых ячеек: маржа в разумных пределах
+    if (marFact != null && (marFact < -50e6 || marFact > 100e6)) continue;
+    out.push({
+      ym: mo.ym, marFact, marPlan,
+      chkFact: rChk ? num(rChk[mo.factCol]) : null,
+      chkPlan: rChk ? num(rChk[mo.planCol]) : null,
+      mach: rMach ? num(rMach[mo.factCol]) : null,
+    });
+  }
+  return out.length ? out : null;
+}
+
+// ══════════════════════════════════════
 // FALLBACK: «Сегодня» и «Пайплайн» держат последний заполненный день,
 // пока за текущие сутки данные не загружены.
 // ══════════════════════════════════════
@@ -555,7 +623,7 @@ function applyTodayFallback(sv, daily) {
 // RENDER
 // ══════════════════════════════════════
 function gauge(pct, fact, plan) {
-  const deg = Math.min(pct || 0, 150) * 2.4;
+  const deg = Math.min(Math.max(pct || 0, 0), 150) * 2.4; // guard: отрицательный % (убыточный месяц) не ломает спидометр
   const col = cH(pct);
   return `<div class="gauge" style="background:conic-gradient(${col} ${deg}deg,#1e293b ${deg}deg)">
     <div class="gauge-inner">
@@ -762,8 +830,8 @@ function renderMonthly(sv, daily) {
   // План текущего месяца — ИТОГОВЫЙ план (не нарастающий). D12 листа ФинРез По суткам; иначе СВОД.
   const fullPlan = (daily && daily.monthPlanMargin) ? daily.monthPlanMargin : (sv.m.plan || 0);
 
-  // Последние закрытые месяцы + текущий
-  const closed = MONTHLY_HISTORY.slice(-MONTHLY_WINDOW);
+  // Последние закрытые месяцы (из живой истории) + текущий
+  const closed = closedMonths(cur).slice(-MONTHLY_WINDOW);
   const lastChkPlan = closed.length ? (closed[closed.length - 1].chkPlan || 0) : 0;
 
   const months = closed.map(r => monthName(+r.ym.split('-')[1])).concat(curName + '*');
@@ -886,19 +954,8 @@ function renderDaily(daily, sv) {
 // ══════════════════════════════════════
 // FETCH
 // ══════════════════════════════════════
-async function fetchCsv(gid, validate) {
-  if (!gid) {
-    throw new Error('Не задан GID листа. Впиши GID листа «СВОД» в настройках (GID_SVOD).');
-  }
-  const direct = directUrl(gid);
+async function fetchAttempts(attempts, validate) {
   let lastErr = null;
-
-  // Источники: pub (если опубликовано — CORS открыт), затем export через прокси
-  const attempts = [];
-  if (PUB_ID) attempts.push(pubUrl(gid));
-  attempts.push(...PROXIES.slice(1).map(fn => fn(direct)));
-  attempts.push(PROXIES[0](direct));
-
   for (let i = 0; i < attempts.length; i++) {
     const url = attempts[i];
     try {
@@ -923,12 +980,23 @@ async function fetchCsv(gid, validate) {
       console.warn(lastErr.message);
     }
   }
-
   throw new Error(
     'Не удалось загрузить данные.\n' +
     'Открой доступ к таблице: Настройки доступа → «Все, у кого есть ссылка» → Читатель.\n' +
     'Последняя ошибка: ' + (lastErr?.message || '?')
   );
+}
+// Цепочка источников для произвольного URL: рабочие прокси, прямой запрос — последним
+function proxyAttempts(targetUrl) {
+  return [...PROXIES.slice(1).map(fn => fn(targetUrl)), PROXIES[0](targetUrl)];
+}
+function fetchViaProxies(targetUrl, validate) { return fetchAttempts(proxyAttempts(targetUrl), validate); }
+
+async function fetchCsv(gid, validate) {
+  if (!gid) throw new Error('Не задан GID листа. Впиши GID листа «СВОД» в настройках (GID_SVOD).');
+  const direct = directUrl(gid);
+  const attempts = PUB_ID ? [pubUrl(gid), ...proxyAttempts(direct)] : proxyAttempts(direct);
+  return fetchAttempts(attempts, validate);
 }
 
 // ══════════════════════════════════════
@@ -1024,6 +1092,15 @@ async function load() {
 
     // Fallback: «Сегодня» и «Пайплайн» держат последний заполненный день, пока сегодня пусто
     applyTodayFallback(sv, daily2);
+
+    // Живая история по месяцам из листа «ФинРез по мес» — закрытые месяцы появляются сами,
+    // без правок кода. Некритично: при неудаче остаётся встроенный конфиг MONTHLY_HISTORY.
+    try {
+      const histCsv = await fetchViaProxies(gvizCsvUrl(SHEET_HISTORY), t => t.includes('Маржа ВСЕГО без НДС') && t.includes('Обслужено машин'));
+      const parsed = parseMonthlyHistory(histCsv);
+      if (parsed && parsed.length >= 2) { ACTIVE_HISTORY = parsed; console.log('✓ История по мес из таблицы:', parsed.length, 'мес'); }
+      else console.warn('История по мес: распознано <2 мес — оставляю встроенный конфиг');
+    } catch (e) { console.warn('История по мес недоступна, использую встроенный конфиг:', e.message); }
 
     const per = sv.period;
     document.getElementById('h-period').textContent = (per ? per.charAt(0).toUpperCase() + per.slice(1) : '—') + ' 2026';
