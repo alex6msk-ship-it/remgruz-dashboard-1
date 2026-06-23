@@ -154,7 +154,7 @@ input:checked+.tslider::before{transform:translateX(14px);background:#000}
       <label class="toggle"><input type="checkbox" id="autoRefreshToggle" checked onchange="toggleAutoRefresh()"><span class="tslider"></span></label>
       Авто-обновление
     </div>
-    <div class="hdate"><span class="live-dot"></span><span id="h-date">—</span></div>
+    <div class="hdate"><span class="live-dot" id="live-dot"></span><span id="h-date">—</span></div>
     <button class="btn-refresh" onclick="triggerRefresh()" id="btn-ref">
       <span id="btn-icon">↺</span> Обновить
     </button>
@@ -263,12 +263,14 @@ function gvizCsvUrl(sheetName) {
   return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
 }
 
-// Прокси как запасной вариант
+// Прокси-источники. Порядок = приоритет. corsproxy сейчас самый стабильный → первым.
+// allorigins периодически недоступен (таймаутит) → в конце, чтобы не тормозить очередь.
+// PROXIES[0] (прямой) работает только если лист «Опубликован в интернете» (PUB_ID).
 const PROXIES = [
-  u => u, // прямой (публичный — работает без прокси)
-  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u => u, // прямой запрос к Google (без прокси) — только при публикации листа
   u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
   u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
 ];
 
 // ══════════════════════════════════════
@@ -342,6 +344,24 @@ function prevMonthRec(cur) {
 // HELPERS
 // ══════════════════════════════════════
 const CH = {};
+// Плавное обновление: если график уже построен — обновляем его данные с анимацией,
+// иначе создаём заново. Убирает мелькание при автообновлении каждые 5 минут.
+function upsertChart(key, canvasId, cfg) {
+  const ch = CH[key];
+  if (ch) {
+    ch.data.labels = cfg.data.labels;
+    cfg.data.datasets.forEach((ds, i) => {
+      if (ch.data.datasets[i]) Object.assign(ch.data.datasets[i], ds);
+      else ch.data.datasets[i] = ds;
+    });
+    ch.data.datasets.length = cfg.data.datasets.length;
+    ch.options = cfg.options;
+    ch.update();
+    return ch;
+  }
+  CH[key] = new Chart(document.getElementById(canvasId), cfg);
+  return CH[key];
+}
 Chart.defaults.font.family = "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
 Chart.defaults.color = '#94a3b8';
 Chart.defaults.borderColor = '#334155';
@@ -844,8 +864,7 @@ function renderMonthly(sv, daily) {
   const subM = document.getElementById('csub-monthly');
   if (subM && months.length) subM.textContent = `${months[0]} – ${curName} · план = итог месяца, текущий — нарастающим`;
 
-  if (CH.m) CH.m.destroy();
-  CH.m = new Chart(document.getElementById('cMonthly'), {
+  upsertChart('m', 'cMonthly', {
     type: 'bar',
     data: {
       labels: months, datasets: [
@@ -870,8 +889,7 @@ function renderMonthly(sv, daily) {
     }
   });
 
-  if (CH.c) CH.c.destroy();
-  CH.c = new Chart(document.getElementById('cCheck'), {
+  upsertChart('c', 'cCheck', {
     type: 'line',
     data: {
       labels: months, datasets: [
@@ -899,7 +917,7 @@ function renderDaily(daily, sv) {
   const cars = daily.dailyCars.slice(0, n);
   while (margins.length < n) margins.push(0);
   while (cars.length < n) cars.push(0);
-  const planDay = (sv.m.plan || 0) / daily.numDays;
+  const planDay = daily.numDays ? (sv.m.plan || 0) / daily.numDays : 0;
   const maxM = Math.max(...margins);
   const maxDay = margins.indexOf(maxM) + 1;
   const avg = margins.reduce((a, b) => a + b, 0) / margins.length;
@@ -914,8 +932,7 @@ function renderDaily(daily, sv) {
     <div><div class="dstat-l">Выше плана</div><div class="dstat-v" style="color:#3b82f6">${above} из ${n}</div><div class="dstat-s">${Math.round(above / n * 100)}%</div></div>
     <div><div class="dstat-l">Сегодня</div><div class="dstat-v" style="color:${cH(sv.m.pctT)}">${fR(sv.m.factT)}</div><div class="dstat-s">${sv.mc.factT || 0} машин</div></div>`;
 
-  if (CH.d) CH.d.destroy();
-  CH.d = new Chart(document.getElementById('cDaily'), {
+  upsertChart('d', 'cDaily', {
     type: 'bar',
     data: {
       labels: Array.from({ length: n }, (_, i) => i + 1), datasets: [
@@ -1052,6 +1069,7 @@ function showLoading(txt) {
 }
 
 function showError(msg, detail) {
+  const ld = document.getElementById('live-dot'); if (ld) ld.style.background = '#64748b'; // серая точка — данные не обновились
   const noAccess = /доступ|HTML|403|401|GID/i.test(msg + ' ' + (detail || ''));
   document.getElementById('setup-banner').style.display = noAccess ? 'block' : 'none';
   document.getElementById('loading').innerHTML = `
@@ -1068,39 +1086,35 @@ async function load() {
   if (icon) { icon.className = 'spin'; icon.textContent = '↺'; }
 
   try {
-    // Параллельно загружаем СВОД и ФинРез По суткам
-    showLoading('Загружаю лист СВОД…');
-    let svodCsv, dailyCsv = null;
+    // Грузим три листа ПАРАЛЛЕЛЬНО (а не по очереди) — втрое быстрее на медленных прокси.
+    showLoading('Загружаю данные из Google Sheets…');
+    const [svodR, dailyR, histR] = await Promise.allSettled([
+      fetchCsv(GID_SVOD,  t => t.includes('Обслужено машин') && t.includes('Маржа ВСЕГО без НДС')),
+      fetchCsv(GID_DAILY, t => t.includes('Маржа ВСЕГО без НДС') && t.length > 1500),
+      fetchViaProxies(gvizCsvUrl(SHEET_HISTORY), t => t.includes('Маржа ВСЕГО без НДС') && t.includes('Обслужено машин')),
+    ]);
 
-    svodCsv = await fetchCsv(GID_SVOD, t => t.includes('Обслужено машин') && t.includes('Маржа ВСЕГО без НДС'));
-
-    try {
-      showLoading('Загружаю суточную статистику…');
-      dailyCsv = await fetchCsv(GID_DAILY, t => t.includes('Маржа ВСЕГО без НДС') && t.length > 1500);
-    } catch (e) {
-      // Суточные данные опциональны
-      console.warn('Не удалось загрузить ФинРез По суткам:', e.message);
-    }
+    if (svodR.status !== 'fulfilled') throw svodR.reason; // СВОД обязателен — без него дашборда нет
+    const svodCsv = svodR.value;
+    const dailyCsv = dailyR.status === 'fulfilled' ? dailyR.value : null;
+    if (dailyR.status !== 'fulfilled') console.warn('ФинРез По суткам недоступен:', dailyR.reason && dailyR.reason.message);
 
     const sv = parseSvod(svodCsv);
     if (!sv || sv.m.plan == null) throw new Error('Данные СВОД не распознаны. Проверьте публикацию листа.');
 
     const daily = dailyCsv ? parseDaily(dailyCsv) : null;
-
     // Если daily не получили из отдельного листа — пробуем из СВОД CSV
     const daily2 = daily || (svodCsv.indexOf('ФинРез По суткам') >= 0 ? parseDaily(svodCsv) : null);
 
-    // Fallback: «Сегодня» и «Пайплайн» держат последний заполненный день, пока сегодня пусто
-    applyTodayFallback(sv, daily2);
-
-    // Живая история по месяцам из листа «ФинРез по мес» — закрытые месяцы появляются сами,
-    // без правок кода. Некритично: при неудаче остаётся встроенный конфиг MONTHLY_HISTORY.
-    try {
-      const histCsv = await fetchViaProxies(gvizCsvUrl(SHEET_HISTORY), t => t.includes('Маржа ВСЕГО без НДС') && t.includes('Обслужено машин'));
-      const parsed = parseMonthlyHistory(histCsv);
+    // История по месяцам — из того же параллельного запроса. Резерв — встроенный конфиг.
+    if (histR.status === 'fulfilled') {
+      const parsed = parseMonthlyHistory(histR.value);
       if (parsed && parsed.length >= 2) { ACTIVE_HISTORY = parsed; console.log('✓ История по мес из таблицы:', parsed.length, 'мес'); }
       else console.warn('История по мес: распознано <2 мес — оставляю встроенный конфиг');
-    } catch (e) { console.warn('История по мес недоступна, использую встроенный конфиг:', e.message); }
+    } else { console.warn('История по мес недоступна, использую встроенный конфиг:', histR.reason && histR.reason.message); }
+
+    // Fallback: «Сегодня» и «Пайплайн» держат последний заполненный день, пока сегодня пусто
+    applyTodayFallback(sv, daily2);
 
     const per = sv.period;
     document.getElementById('h-period').textContent = (per ? per.charAt(0).toUpperCase() + per.slice(1) : '—') + ' 2026';
@@ -1124,6 +1138,9 @@ async function load() {
     const slabelToday = document.getElementById('slabel-today');
     const titleToday  = document.getElementById('title-today-detail');
     const pipeTitle   = document.getElementById('pipe-title');
+    // «Живой» индикатор: зелёный = данные за сегодня; жёлтый = показан прошлый день (ждём сегодня)
+    const liveDot = document.getElementById('live-dot');
+    if (liveDot) liveDot.style.background = sv.todayFallbackDay ? '#f59e0b' : '#22c55e';
     if (sv.todayFallbackDay) {
       const tag = ` <span class="stale">⏳ ждём сегодня · показан ${sv.todayFallbackDay}-й день</span>`;
       if (slabelToday) slabelToday.innerHTML = 'Сегодня' + tag;
