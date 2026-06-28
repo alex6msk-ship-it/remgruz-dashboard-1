@@ -3,173 +3,208 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RemGruz #1 — СВОД</title>
+<title>RemGruz №1 — СВОД</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;700;800;900&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0f172a;--bg2:#1e293b;--bg3:#263347;
-  --border:#334155;--text:#e2e8f0;--muted:#94a3b8;--accent:#f59e0b;
-  --green:#22c55e;--red:#ef4444;--blue:#3b82f6;--purple:#8b5cf6;
-  --green-bg:#052e16;--red-bg:#450a0a;--amber-bg:#451a03;
+  --bg:#0a0b0e;--bg2:#15181f;--bg3:#1b1f28;
+  --card:#15181f;--card2:#1b1f28;--card3:#20242e;
+  --border:#262b36;--border2:#323847;
+  --text:#f3f4f6;--muted:#9097a3;--muted2:#6b7280;
+  --accent:#ff6a2b;--accent2:#e8551a;--accent-soft:rgba(255,106,43,.13);
+  --green:#3ecf8e;--green-soft:rgba(62,207,142,.13);
+  --amber:#f5a524;--amber-soft:rgba(245,165,36,.13);
+  --red:#f0616a;--red-soft:rgba(240,97,106,.13);
+  --blue:#5b9dff;--purple:#a78bfa;--indigo:#a78bfa;
 }
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:16px}
-/* ─── Header ─── */
-.hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;padding:14px 20px;background:var(--bg2);border:1px solid var(--border);border-radius:14px}
-.hlogo{display:flex;align-items:center;gap:12px}
-.hicon{width:44px;height:44px;object-fit:contain;display:block;flex-shrink:0}
-.htitle h1{font-size:16px;font-weight:700;color:#f1f5f9}
-.htitle p{font-size:11px;color:var(--muted);margin-top:2px}
-.hright{display:flex;align-items:center;gap:14px}
-.hperiod{font-size:13px;font-weight:700;color:var(--accent)}
-.hdate{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:6px}
-.live-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite;display:inline-block;flex-shrink:0}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.btn-refresh{padding:7px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:
+    radial-gradient(1200px 520px at 12% -8%, rgba(255,106,43,.10), transparent 60%),
+    radial-gradient(900px 480px at 100% 0%, rgba(255,106,43,.05), transparent 55%),
+    var(--bg);
+  color:var(--text);min-height:100vh;padding:18px;-webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px;margin:0 auto}
+h1,h2,h3,.uns{font-family:'Unbounded',sans-serif}
+
+/* ─── HEADER ─── */
+.hdr{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:16px 22px;margin-bottom:16px;border-radius:22px;background:linear-gradient(135deg,#171b23,#0f1218);border:1px solid var(--border)}
+.hlogo{display:flex;align-items:center;gap:14px}
+.hlogo img{width:46px;height:46px;object-fit:contain;border-radius:11px}
+.hlogo .shield{width:46px;height:46px;border-radius:12px;display:none;background:linear-gradient(135deg,var(--accent),var(--accent2));align-items:center;justify-content:center}
+.htitle h1{font-size:19px;font-weight:800;letter-spacing:-.01em;line-height:1}
+.htitle h1 b{color:var(--accent);font-weight:800}
+.htitle p{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);margin-top:5px;font-weight:600}
+.hright{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.toggle-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);font-weight:600}
+.toggle{position:relative;width:36px;height:20px;cursor:pointer}
+.toggle input{opacity:0;width:0;height:0}
+.tslider{position:absolute;inset:0;background:var(--card3);border-radius:20px;transition:.3s}
+.tslider::before{content:'';position:absolute;height:14px;width:14px;left:3px;bottom:3px;background:var(--muted);border-radius:50%;transition:.3s}
+input:checked+.tslider{background:linear-gradient(135deg,var(--accent),var(--accent2))}
+input:checked+.tslider::before{transform:translateX(16px);background:#fff}
+.btn-refresh{padding:9px 16px;background:var(--card2);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-size:12px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:7px;font-family:'Manrope'}
 .btn-refresh:hover{border-color:var(--accent);color:var(--accent)}
 .spin{display:inline-block;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-/* ─── Loading ─── */
-#loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:14px}
-.loader{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
-.load-txt{color:var(--muted);font-size:13px;text-align:center;max-width:340px;line-height:1.6}
-.err-title{color:var(--red);font-size:15px;font-weight:600}
-.err-detail{color:var(--muted);font-size:12px;margin-top:4px;font-family:monospace;word-break:break-all;max-width:500px;text-align:center;line-height:1.5}
-.btn-retry{padding:8px 22px;background:var(--accent);border:none;border-radius:8px;color:#000;font-size:13px;font-weight:600;cursor:pointer;margin-top:8px}
-/* ─── Setup banner ─── */
-.setup-banner{background:#1a1500;border:1px solid #854d0e;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:none}
-.setup-banner h3{color:#fbbf24;font-size:14px;margin-bottom:8px}
-.setup-banner ol{color:var(--muted);font-size:13px;padding-left:20px;line-height:2}
-.setup-banner code{background:var(--bg3);padding:2px 6px;border-radius:4px;font-size:12px;color:#f59e0b}
-/* ─── Section label ─── */
-.slabel{font-size:10px;text-transform:uppercase;letter-spacing:.1em;font-weight:700;color:var(--muted);margin:0 0 10px 2px}
-.slabel .stale{color:var(--accent);text-transform:none;letter-spacing:0;font-weight:600;margin-left:8px}
-/* ─── Gauges ─── */
-.gauge-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
-.gpanel{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:16px;text-align:center}
-.gpanel-title{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--bg3)}
-.gauge{width:90px;height:90px;border-radius:50%;display:flex;align-items:center;justify-content:center;position:relative;margin:0 auto}
-.gauge::before{content:'';position:absolute;inset:11px;border-radius:50%;background:var(--bg2)}
-.gauge-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center}
-.gauge-pct{font-size:18px;font-weight:800;line-height:1}
-.gauge-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
-.gauge-vals{margin-top:8px;font-size:11px;color:var(--muted);line-height:1.7;text-align:center}
-.gauge-fact{font-weight:700}
-/* ─── Detail row ─── */
-.detail-row{display:grid;grid-template-columns:1.6fr 1fr;gap:12px;margin-bottom:20px}
-.card{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:16px 18px}
-.card-title{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:12px}
-.divider{height:1px;background:var(--bg3);margin:14px 0}
-/* ─── Tables ─── */
+
+/* ─── PILLS ─── */
+.pill{display:inline-flex;align-items:center;gap:7px;padding:7px 13px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid var(--border2);background:rgba(255,255,255,.02);color:var(--muted)}
+.pill .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pill.live{border-color:rgba(62,207,142,.4);color:#7fe0b5}
+.pill.live .dot{background:var(--green);animation:pulse 2s infinite}
+.pill.acc{border-color:rgba(255,106,43,.45);color:#ffa173}
+.pill.acc .dot{background:var(--accent)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(62,207,142,.5)}50%{box-shadow:0 0 0 5px rgba(62,207,142,0)}}
+
+/* ─── HERO ─── */
+.hero{position:relative;overflow:hidden;border-radius:24px;padding:26px 28px;margin-bottom:22px;background:radial-gradient(600px 240px at 88% -30%, rgba(255,106,43,.16), transparent 60%),linear-gradient(135deg,#181c25,#101319);border:1px solid var(--border)}
+.hero h2{font-size:34px;line-height:1.05;font-weight:800;letter-spacing:-.02em}
+.hero h2 b{color:var(--accent);font-weight:800}
+.hero .lead{color:var(--muted);font-size:14px;line-height:1.6;margin-top:12px;max-width:560px;font-weight:500}
+.hero .pills{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
+
+/* ─── SECTION HEAD (numbered) ─── */
+.shead{display:flex;align-items:center;gap:13px;margin:26px 2px 14px}
+.snum{width:34px;height:34px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:'Unbounded';font-weight:700;font-size:15px;color:#fff;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 4px 14px rgba(255,106,43,.28)}
+.stitle{font-size:17px;font-weight:800;letter-spacing:-.01em;font-family:'Unbounded'}
+.ssub{font-size:12px;color:var(--muted);margin-top:3px;font-weight:500}
+.stale{color:var(--accent);text-transform:none;letter-spacing:0;font-weight:700;margin-left:8px;font-size:12px;font-family:'Manrope'}
+
+/* ─── KPI CARDS ─── */
+.gauge-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:6px}
+.gauge-row.today .kpi{padding:16px 18px}
+.kpi{display:flex;align-items:center;justify-content:space-between;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px 22px;transition:.2s;position:relative;overflow:hidden}
+.kpi:hover{border-color:var(--border2);transform:translateY(-2px)}
+.kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--accent);opacity:0;transition:.2s}
+.kpi:hover::before{opacity:.7}
+.kpi-label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:700}
+.kpi-val{font-family:'Unbounded';font-size:25px;font-weight:700;line-height:1.1;margin-top:9px;letter-spacing:-.01em}
+.gauge-row.today .kpi-val{font-size:21px}
+.kpi-plan{font-size:11px;color:var(--muted);margin-top:6px;font-weight:600}
+.kpi-plan b{color:var(--text)}
+.ring{position:relative;display:grid;place-items:center;width:66px;height:66px;border-radius:50%;flex-shrink:0;background:conic-gradient(var(--c) calc(var(--p)*3.6deg), #20242e 0)}
+.ring::before{content:'';position:absolute;inset:6px;border-radius:50%;background:var(--card)}
+.ring span{position:relative;z-index:1;font-family:'Unbounded';font-weight:700;font-size:13px;color:var(--c)}
+.gauge-row.today .ring{width:56px;height:56px}
+.gauge-row.today .ring span{font-size:12px}
+
+/* ─── GRIDS / CARDS ─── */
+.detail-row{display:grid;grid-template-columns:1.55fr 1fr;gap:14px;margin-bottom:6px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px 22px}
+.card-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-title::before{content:'';width:7px;height:7px;border-radius:2px;background:var(--accent);flex-shrink:0}
+.divider{height:1px;background:var(--border);margin:18px 0}
+
+/* ─── TABLES ─── */
 .ctable{width:100%;border-collapse:collapse}
-.ctable th{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding:5px 7px;border-bottom:2px solid var(--bg3);text-align:left;font-weight:600}
-.ctable td{font-size:11px;padding:8px 7px;border-bottom:1px solid var(--bg3);color:var(--text)}
+.ctable th{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;font-weight:700}
+.ctable td{font-size:12px;padding:10px 8px;border-bottom:1px solid var(--border);color:var(--text);font-weight:600}
 .ctable tr:last-child td{border-bottom:none}
-.ctable tr:hover td{background:var(--bg3)}
-.ctable td:first-child{color:var(--muted);font-size:10px}
-.badge{display:inline-block;padding:2px 7px;border-radius:5px;font-size:10px;font-weight:700}
-.bg{background:#052e16;color:#4ade80}
-.ba{background:#451a03;color:#fbbf24}
-.br{background:#450a0a;color:#f87171}
-.dpos{color:#4ade80;font-size:10px}
-.dneg{color:#f87171;font-size:10px}
-.sub-row td{background:var(--bg3)}
-.sub-row td:first-child{padding-left:18px;font-size:10px;color:#94a3b8}
-/* ─── Pipeline ─── */
-.pipe-item{padding:10px 0;border-bottom:1px solid var(--bg3)}
-.pipe-item:last-of-type{border-bottom:none}
-.plabel{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}
-.pcount{font-size:24px;font-weight:800;color:var(--text);line-height:1;display:inline}
-.punit{font-size:11px;color:var(--muted);margin-left:4px}
-.pamount{font-size:12px;font-weight:600;color:var(--accent);margin-top:3px}
-.pbar{height:3px;background:var(--bg3);border-radius:2px;margin-top:7px;overflow:hidden}
-.pfill{height:100%;border-radius:2px}
-.mprog{background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:12px;margin-top:14px}
-.mptitle{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:9px}
-.mprow{display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px}
+.ctable tr:hover td{background:var(--card2)}
+.ctable td:first-child{color:var(--muted);font-size:11px;font-weight:600}
+.ctable strong{font-weight:800}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:10px;font-weight:800}
+.bg{background:var(--green-soft);color:#5fe0a8}
+.ba{background:var(--accent-soft);color:#ffa173}
+.br{background:var(--red-soft);color:#f0616a}
+.dpos{color:#5fe0a8;font-size:11px;font-weight:700}
+.dneg{color:#f0616a;font-size:11px;font-weight:700}
+.sub-row td{background:rgba(255,255,255,.015)}
+.sub-row td:first-child{padding-left:20px;font-size:11px;color:var(--muted2)}
+
+/* ─── PIPELINE ─── */
+.pipe-item{padding:13px 0;border-bottom:1px solid var(--border)}
+.pipe-item:first-of-type{padding-top:0}
+.plabel{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:6px;font-weight:700}
+.pcount{font-family:'Unbounded';font-size:26px;font-weight:700;color:var(--text);line-height:1;display:inline}
+.punit{font-size:12px;color:var(--muted);margin-left:5px;font-weight:600}
+.pamount{font-size:13px;font-weight:800;color:var(--accent);margin-top:5px}
+.pbar{height:4px;background:var(--card3);border-radius:3px;margin-top:9px;overflow:hidden}
+.pfill{height:100%;border-radius:3px}
+.mprog{background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:14px;margin-top:16px}
+.mptitle{font-size:9px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:10px;font-weight:700}
+.mprow{display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px;font-weight:600}
 .mplabel{color:var(--muted)}
-.mpval{font-weight:700}
-.mpbar{height:5px;background:var(--border);border-radius:3px;margin:4px 0 10px}
-.mpfill{height:100%;border-radius:3px;transition:width .6s ease}
-.mpnote{font-size:10px;color:var(--muted);margin-top:4px}
-/* ─── Charts ─── */
-.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
-.ctitle{font-size:12px;font-weight:600;color:var(--muted)}
-.csub{font-size:10px;color:#8a9bb5;margin:2px 0 12px}
-canvas{max-width:100%}
-/* ─── Daily ─── */
-.daily-stats{display:flex;gap:14px;flex-wrap:wrap;background:var(--bg3);border:1px solid var(--border);border-radius:9px;padding:10px 14px;margin-bottom:14px}
-.dstat-l{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
-.dstat-v{font-size:15px;font-weight:700;color:var(--text)}
-.dstat-s{font-size:10px;color:var(--muted)}
-/* ─── Countdown ─── */
-.refresh-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:9px;margin-bottom:16px;font-size:11px;color:var(--muted)}
-.rbar-fill{height:3px;background:var(--bg3);border-radius:2px;flex:1;overflow:hidden}
-.rbar-prog{height:100%;background:var(--accent);border-radius:2px;transition:width 1s linear}
-/* ─── Auto-refresh toggle ─── */
-.toggle-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)}
-.toggle{position:relative;width:32px;height:18px;cursor:pointer}
-.toggle input{opacity:0;width:0;height:0}
-.tslider{position:absolute;inset:0;background:var(--bg3);border-radius:18px;transition:.3s}
-.tslider::before{content:'';position:absolute;height:12px;width:12px;left:3px;bottom:3px;background:var(--muted);border-radius:50%;transition:.3s}
-input:checked+.tslider{background:var(--accent)}
-input:checked+.tslider::before{transform:translateX(14px);background:#000}
-/* ─── Comparison cards ─── */
-.cmp-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
-.cmp-card{background:var(--bg2);border:1px solid var(--border);border-radius:13px;padding:16px 18px}
-.cmp-label{font-size:9px;text-transform:uppercase;letter-spacing:.08em;font-weight:700;color:var(--muted);margin-bottom:12px}
-.cmp-vs{display:flex;align-items:flex-end;gap:10px;margin-bottom:10px}
+.mpval{font-weight:800}
+.mpbar{height:6px;background:var(--card3);border-radius:4px;margin:5px 0 10px;overflow:hidden}
+.mpfill{height:100%;border-radius:4px;transition:width .7s ease}
+.mpnote{font-size:11px;color:var(--muted);margin-top:5px;font-weight:600}
+
+/* ─── COMPARISON ─── */
+.cmp-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:6px}
+.cmp-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px 22px}
+.cmp-label{font-size:10px;text-transform:uppercase;letter-spacing:.07em;font-weight:700;color:var(--muted);margin-bottom:14px;line-height:1.4}
+.cmp-vs{display:flex;align-items:flex-end;gap:12px;margin-bottom:12px}
 .cmp-main{display:flex;flex-direction:column}
-.cmp-main-val{font-size:20px;font-weight:800;line-height:1;color:var(--text)}
-.cmp-main-lbl{font-size:10px;color:var(--muted);margin-top:3px}
-.cmp-arrow{font-size:22px;line-height:1;padding-bottom:2px;opacity:.7}
+.cmp-main-val{font-family:'Unbounded';font-size:22px;font-weight:700;line-height:1}
+.cmp-main-lbl{font-size:10px;color:var(--muted);margin-top:5px;font-weight:600}
+.cmp-arrow{font-size:22px;line-height:1;padding-bottom:3px;opacity:.85}
 .cmp-ref{display:flex;flex-direction:column}
-.cmp-ref-val{font-size:14px;font-weight:700;line-height:1}
-.cmp-ref-lbl{font-size:10px;color:var(--muted);margin-top:3px}
-.cmp-bar-wrap{height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;margin:10px 0 8px}
-.cmp-bar{height:100%;border-radius:3px;transition:width .6s ease}
-.cmp-delta{font-size:11px;font-weight:600}
-.cmp-pct{font-size:13px;font-weight:800}
-/* ─── Plan card ─── */
-.plan-big{font-size:42px;font-weight:900;line-height:1;letter-spacing:-.02em}
-.plan-sub{font-size:11px;color:var(--muted);margin-top:4px}
-.proj-row{display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:12px;border-top:1px solid var(--bg3)}
-/* ─── Responsive ─── */
-/* Планшет: графики и детализация в один столбец, сравнение в два */
-@media(max-width:980px){.chart-row,.detail-row{grid-template-columns:1fr}.cmp-row{grid-template-columns:1fr 1fr}}
-/* Телефон: всё в один столбец, компактнее отступы */
-@media(max-width:680px){
-  body{padding:11px}
-  .gauge-row,.cmp-row{grid-template-columns:1fr}
-  .hright{flex-direction:column;align-items:flex-end;gap:6px}
-  .hdr{padding:12px 14px;border-radius:12px}
-  .card{padding:14px}
-  .gpanel{padding:14px}
-  .slabel{margin-bottom:8px}
-}
-/* Узкий телефон: ужимаем крупные числа и таблицы */
-@media(max-width:430px){
-  .htitle h1{font-size:15px}
-  .htitle p{font-size:10px}
-  .ctable th,.ctable td{padding:6px 4px}
-  .ctable td{font-size:10px}
-  .ctable th{font-size:8px}
-  .plan-big{font-size:34px}
-  .cmp-main-val{font-size:18px}
-  .gauge{width:84px;height:84px}
-  .pcount{font-size:21px}
-}
+.cmp-ref-val{font-size:15px;font-weight:800;line-height:1;color:var(--muted)}
+.cmp-ref-lbl{font-size:10px;color:var(--muted);margin-top:5px;font-weight:600}
+.cmp-bar-wrap{height:6px;background:var(--card3);border-radius:4px;overflow:hidden;margin:12px 0 10px}
+.cmp-bar{height:100%;border-radius:4px;transition:width .6s ease}
+.cmp-delta{font-size:12px;font-weight:800}
+.cmp-pct{font-family:'Unbounded';font-size:14px;font-weight:700}
+.plan-big{font-family:'Unbounded';font-size:38px;font-weight:800;line-height:1;letter-spacing:-.02em}
+.proj-row{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+
+/* ─── CHARTS ─── */
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:6px}
+.ctitle{font-size:13px;font-weight:700;color:var(--text)}
+.csub{font-size:11px;color:var(--muted);margin:3px 0 14px;font-weight:500}
+canvas{max-width:100%}
+.daily-stats{display:flex;gap:18px;flex-wrap:wrap;background:var(--card2);border:1px solid var(--border);border-radius:14px;padding:13px 16px;margin-bottom:16px}
+.dstat-l{font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700}
+.dstat-v{font-family:'Unbounded';font-size:16px;font-weight:700;margin-top:3px}
+.dstat-s{font-size:10px;color:var(--muted);margin-top:2px;font-weight:600}
+
+/* ─── COUNTDOWN ─── */
+.refresh-bar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:18px;font-size:12px;color:var(--muted);font-weight:600}
+.rbar-fill{height:4px;background:var(--card3);border-radius:3px;flex:1;overflow:hidden}
+.rbar-prog{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width 1s linear}
+
+/* ─── LOADING / ERROR ─── */
+#loading{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:320px;gap:16px}
+.loader{width:46px;height:46px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite}
+.load-txt{color:var(--muted);font-size:13px;text-align:center;max-width:360px;line-height:1.6;font-weight:600}
+.err-title{font-family:'Unbounded';color:var(--red);font-size:16px;font-weight:700}
+.err-detail{color:var(--muted);font-size:12px;margin-top:4px;font-family:monospace;word-break:break-all;max-width:520px;text-align:center;line-height:1.5}
+.btn-retry{padding:10px 24px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:12px;color:#fff;font-size:13px;font-weight:800;cursor:pointer;margin-top:8px;font-family:'Manrope'}
+
+/* ─── SETUP BANNER ─── */
+.setup-banner{background:var(--amber-soft);border:1px solid rgba(245,165,36,.4);border-radius:18px;padding:18px 22px;margin-bottom:20px;display:none}
+.setup-banner h3{font-family:'Unbounded';color:#f5c97a;font-size:14px;margin-bottom:10px;font-weight:700}
+.setup-banner ol{color:var(--muted);font-size:13px;padding-left:20px;line-height:2;font-weight:500}
+.setup-banner code{background:var(--card3);padding:2px 7px;border-radius:6px;font-size:12px;color:var(--accent);font-weight:700}
+
+/* ─── FOOTER ─── */
+.foot{margin-top:30px;padding:20px 4px;text-align:center;border-top:1px solid var(--border);color:var(--muted2);font-size:11px;font-weight:600}
+.foot b{color:var(--muted)}
+
+/* ─── RESPONSIVE ─── */
+@media(max-width:920px){.gauge-row,.cmp-row,.chart-row{grid-template-columns:1fr 1fr}.detail-row{grid-template-columns:1fr}}
+@media(max-width:640px){body{padding:12px}.gauge-row,.cmp-row,.chart-row{grid-template-columns:1fr}.hero h2{font-size:26px}.hdr{padding:14px 16px}.hright{width:100%;justify-content:space-between}}
 </style>
 </head>
 <body>
+<div class="wrap">
 
 <!-- ═══ HEADER ═══ -->
 <div class="hdr">
   <div class="hlogo">
-    <img class="hicon" src="logo.png" alt="RemGruz #1">
+    <img src="logo.png" alt="RemGruz №1" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    <div class="shield"><svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 2l8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5l8-3z" fill="#fff" opacity=".95"/><path d="M9 12l2 2 4-4" stroke="#e8551a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
     <div class="htitle">
-      <h1>RemGruz #1 — СВОД</h1>
-      <p>Операционный дашборд · <span id="h-period">—</span></p>
+      <h1>RemGruz <b>№1</b></h1>
+      <p>СВОД · операционный дашборд</p>
     </div>
   </div>
   <div class="hright">
@@ -177,14 +212,22 @@ input:checked+.tslider::before{transform:translateX(14px);background:#000}
       <label class="toggle"><input type="checkbox" id="autoRefreshToggle" checked onchange="toggleAutoRefresh()"><span class="tslider"></span></label>
       Авто-обновление
     </div>
-    <div class="hdate"><span class="live-dot" id="live-dot"></span><span id="h-date">—</span></div>
-    <button class="btn-refresh" onclick="triggerRefresh()" id="btn-ref">
-      <span id="btn-icon">↺</span> Обновить
-    </button>
+    <button class="btn-refresh" onclick="triggerRefresh()" id="btn-ref"><span id="btn-icon">↺</span> Обновить</button>
   </div>
 </div>
 
-<!-- ═══ SETUP BANNER (показывается при ошибке доступа) ═══ -->
+<!-- ═══ HERO ═══ -->
+<div class="hero">
+  <h2>Операционная <b>сводка</b></h2>
+  <p class="lead">Маржа, обслуженные машины и средний чек — нарастающим итогом за месяц и за сегодня. Данные тянутся вживую из Google Sheets, обновление каждые 5 минут.</p>
+  <div class="pills">
+    <span class="pill live"><span class="dot"></span>Данные актуальны</span>
+    <span class="pill"><span class="dot" style="background:var(--muted)"></span><span id="h-date">—</span></span>
+    <span class="pill acc"><span class="dot"></span><span id="h-period">—</span></span>
+  </div>
+</div>
+
+<!-- ═══ SETUP BANNER ═══ -->
 <div class="setup-banner" id="setup-banner">
   <h3>⚙️ Нужно открыть доступ к таблице</h3>
   <ol>
@@ -204,18 +247,29 @@ input:checked+.tslider::before{transform:translateX(14px);background:#000}
 
 <!-- ═══ COUNTDOWN ═══ -->
 <div class="refresh-bar" id="refresh-bar" style="display:none">
-  <span style="white-space:nowrap">Следующее обновление: <strong id="countdown">5:00</strong></span>
+  <span style="white-space:nowrap">Следующее обновление: <strong id="countdown" style="color:var(--accent)">5:00</strong></span>
   <div class="rbar-fill"><div class="rbar-prog" id="rbar-prog" style="width:100%"></div></div>
 </div>
 
 <!-- ═══ APP ═══ -->
 <div id="app" style="display:none">
-  <div class="slabel">Нарастающий итог · месяц</div>
+
+  <div class="shead">
+    <div class="snum">1</div>
+    <div><div class="stitle">Нарастающий итог</div><div class="ssub">С начала месяца · план vs факт</div></div>
+  </div>
   <div class="gauge-row" id="gauges-month"></div>
 
-  <div class="slabel" id="slabel-today">Сегодня</div>
-  <div class="gauge-row" id="gauges-today"></div>
+  <div class="shead">
+    <div class="snum">2</div>
+    <div><div class="stitle" id="slabel-today">Сегодня</div><div class="ssub">Показатели за текущие сутки</div></div>
+  </div>
+  <div class="gauge-row today" id="gauges-today"></div>
 
+  <div class="shead">
+    <div class="snum">3</div>
+    <div><div class="stitle">Детализация и пайплайн</div><div class="ssub">Разбор по показателям и машины прямо сейчас</div></div>
+  </div>
   <div class="detail-row">
     <div class="card">
       <div class="card-title">Детализация · нарастающий итог</div>
@@ -236,158 +290,77 @@ input:checked+.tslider::before{transform:translateX(14px);background:#000}
     </div>
   </div>
 
-  <div class="slabel">Сравнительный анализ · маржа без НДС</div>
+  <div class="shead">
+    <div class="snum">4</div>
+    <div><div class="stitle">Сравнительный анализ</div><div class="ssub">Маржа без НДС · текущий месяц vs предыдущий</div></div>
+  </div>
   <div class="cmp-row" id="cmp-row"></div>
 
-  <div class="slabel">Динамика по месяцам</div>
+  <div class="shead">
+    <div class="snum">5</div>
+    <div><div class="stitle">Динамика по месяцам</div><div class="ssub">Маржа план/факт и средний чек</div></div>
+  </div>
   <div class="chart-row">
     <div class="card">
       <div class="ctitle">Маржа без НДС · план vs факт</div>
-      <div class="csub" id="csub-monthly">Динамика по месяцам · план = итог месяца, текущий — нарастающим</div>
-      <canvas id="cMonthly" height="195"></canvas>
+      <div class="csub">Февраль – текущий период · план = итог месяца</div>
+      <canvas id="cMonthly" height="200"></canvas>
     </div>
     <div class="card">
       <div class="ctitle">Средний чек без НДС</div>
-      <div class="csub" id="csub-check">Динамика по месяцам</div>
-      <canvas id="cCheck" height="195"></canvas>
+      <div class="csub">Динамика по месяцам</div>
+      <canvas id="cCheck" height="200"></canvas>
     </div>
   </div>
 
-  <div class="slabel" id="daily-label" style="display:none">Суточная динамика</div>
+  <div class="shead" id="daily-label" style="display:none">
+    <div class="snum">6</div>
+    <div><div class="stitle">Суточная динамика</div><div class="ssub">Ежедневная маржа без НДС и обслуженные ТС</div></div>
+  </div>
   <div class="card" id="daily-card" style="display:none">
     <div class="ctitle">Ежедневная маржа без НДС</div>
     <div class="csub" id="daily-sub">—</div>
     <div class="daily-stats" id="daily-stats"></div>
-    <canvas id="cDaily" height="145"></canvas>
+    <canvas id="cDaily" height="150"></canvas>
   </div>
+
+</div>
+
+<div class="foot"><b>RemGruz №1</b> · ООО «ДЛСГРУПП» · операционный дашборд СВОД</div>
+
 </div>
 
 <script>
 // ══════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════
-// Новая таблица RemGruz #1
 const SHEET_ID  = '1-r4datyaZgx6UkLObV0t78sQfLpWIsypKayFyeP-9io';
 const GID_SVOD  = '8846691';     // GID листа «СВОД»
-const GID_DAILY = '902143223';   // GID листа «ФинРез По суткам» (из присланной ссылки)
-// PUB_ID — заполняется ТОЛЬКО при «Опубликовать в интернете». Пусто = грузим по доступу-по-ссылке.
+const GID_DAILY = '902143223';   // GID листа «ФинРез По суткам»
 const PUB_ID = '';
 const AUTO_REFRESH_SEC = 300; // 5 минут
 
-// Публичные URL
 function pubUrl(gid) {
   return `https://docs.google.com/spreadsheets/d/e/${PUB_ID}/pub?output=csv&gid=${gid}`;
 }
 function directUrl(gid) {
   return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${gid}`;
 }
-// gviz-экспорт листа по ИМЕНИ (не нужен gid) — для листа помесячной истории
-function gvizCsvUrl(sheetName) {
-  return `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetName)}`;
-}
 
-// Прокси-источники. Порядок = приоритет. corsproxy сейчас самый стабильный → первым.
-// allorigins периодически недоступен (таймаутит) → в конце, чтобы не тормозить очередь.
-// PROXIES[0] (прямой) работает только если лист «Опубликован в интернете» (PUB_ID).
 const PROXIES = [
-  u => u, // прямой запрос к Google (без прокси) — только при публикации листа
+  u => u,
+  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
   u => `https://corsproxy.io/?${encodeURIComponent(u)}`,
   u => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-  u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
 ];
-
-// ══════════════════════════════════════
-// ИСТОРИЯ ПО МЕСЯЦАМ (факт закрытых месяцев — источник: лист «ФинРез по мес»)
-// ВАЖНО: текущий месяц СЮДА НЕ вносим — он всегда берётся live из листа СВОД.
-// Когда месяц закрылся, добавь его одной строкой (или это сделает авто-обновление).
-// marFact / marPlan — Маржа ВСЕГО без НДС; chkFact / chkPlan — Ср чек без НДС; mach — обслужено машин.
-// ══════════════════════════════════════
-const RU_MONTHS = ['', 'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
-const MONTHLY_HISTORY = [
-  { ym: '2026-02', marFact: 2768060, marPlan: 2904000, chkFact: 24281, chkPlan: 24000, mach: 147 },
-  { ym: '2026-03', marFact: 4410059, marPlan: 3978000, chkFact: 32190, chkPlan: 26000, mach: 178 },
-  { ym: '2026-04', marFact: 5151935, marPlan: 6699000, chkFact: 32402, chkPlan: 29000, mach: 206 },
-  { ym: '2026-05', marFact: 6999978, marPlan: 6944902, chkFact: 40698, chkPlan: 29000, mach: 223 },
-];
-// Сколько закрытых месяцев показывать на графике (+ текущий). Скользящее окно.
-const MONTHLY_WINDOW = 5;
-
-// Лист помесячной истории в той же книге. Дашборд читает его в рантайме и сам
-// подхватывает каждый новый закрытый месяц — править код больше не нужно.
-// Если лист недоступен/не распознан — остаётся встроенный MONTHLY_HISTORY (резерв).
-const SHEET_HISTORY = 'ФинРез по мес';
-let ACTIVE_HISTORY = MONTHLY_HISTORY.slice();
-const MON_ABBR = { 'янв': 1, 'фев': 2, 'мар': 3, 'апр': 4, 'май': 5, 'июн': 6, 'июл': 7, 'авг': 8, 'сен': 9, 'окт': 10, 'ноя': 11, 'дек': 12 };
-// "Май’26 План" / "Сен’25" → "2026-05"
-function parseYm(label) {
-  const t = String(label || '').toLowerCase();
-  const mm = t.match(/(янв|фев|мар|апр|май|июн|июл|авг|сен|окт|ноя|дек)/);
-  const yy = t.match(/(\d{2})/);
-  if (!mm || !yy) return null;
-  return (2000 + parseInt(yy[1])) + '-' + String(MON_ABBR[mm[1]]).padStart(2, '0');
-}
-// Закрытые месяцы (строго до текущего, с фактом) из активной истории, по возрастанию
-function closedMonths(cur) {
-  return ACTIVE_HISTORY.filter(r => {
-    if (!r.ym) return false;
-    const a = r.ym.split('-'), y = +a[0], mo = +a[1];
-    const past = (y < cur.y) || (y === cur.y && mo < cur.m);
-    return past && r.marFact != null && r.marFact > 0;
-  }).sort((a, b) => a.ym < b.ym ? -1 : 1);
-}
-
-function monthName(m) { return RU_MONTHS[m] || ('мес ' + m); }
-function ymKey(y, m) { return y + '-' + String(m).padStart(2, '0'); }
-function daysInMonthOf(y, m) { return new Date(y, m, 0).getDate(); }
-
-// Текущий год/месяц — из даты листа СВОД (формат M/D/YYYY), иначе системная дата
-function currentYM(sv) {
-  if (sv && sv.date) {
-    const p = sv.date.split('/');
-    if (p.length >= 3) { const m = +p[0], y = +p[2]; if (m >= 1 && m <= 12 && y > 2000) return { y, m }; }
-  }
-  const d = new Date(); return { y: d.getFullYear(), m: d.getMonth() + 1 };
-}
-// День месяца — из даты листа СВОД, иначе системный
-function currentDay(sv) {
-  if (sv && sv.date) { const p = sv.date.split('/'); if (p.length >= 2) { const d = +p[1]; if (d >= 1 && d <= 31) return d; } }
-  return new Date().getDate();
-}
-// Запись предыдущего завершённого месяца относительно текущего (из активной истории)
-function prevMonthRec(cur) {
-  const cl = closedMonths(cur);
-  let py = cur.y, pm = cur.m - 1; if (pm < 1) { pm = 12; py--; }
-  const exact = cl.find(r => r.ym === ymKey(py, pm));
-  const rec = exact || cl[cl.length - 1];
-  if (rec) { const a = rec.ym.split('-'); return { rec, y: +a[0], m: +a[1] }; }
-  return null;
-}
 
 // ══════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════
 const CH = {};
-// Плавное обновление: если график уже построен — обновляем его данные с анимацией,
-// иначе создаём заново. Убирает мелькание при автообновлении каждые 5 минут.
-function upsertChart(key, canvasId, cfg) {
-  const ch = CH[key];
-  if (ch) {
-    ch.data.labels = cfg.data.labels;
-    cfg.data.datasets.forEach((ds, i) => {
-      if (ch.data.datasets[i]) Object.assign(ch.data.datasets[i], ds);
-      else ch.data.datasets[i] = ds;
-    });
-    ch.data.datasets.length = cfg.data.datasets.length;
-    ch.options = cfg.options;
-    ch.update();
-    return ch;
-  }
-  CH[key] = new Chart(document.getElementById(canvasId), cfg);
-  return CH[key];
-}
-Chart.defaults.font.family = "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
-Chart.defaults.color = '#94a3b8';
-Chart.defaults.borderColor = '#334155';
+Chart.defaults.font.family = "'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif";
+Chart.defaults.color = '#9097a3';
+Chart.defaults.borderColor = '#262b36';
 
 function pN(s) {
   if (s == null || s === '') return null;
@@ -402,13 +375,13 @@ function pP(s) {
 function fR(n) {
   if (n == null) return '—';
   const a = Math.abs(n), sg = n < 0 ? '−' : '';
-  if (a >= 1e6) return sg + (a / 1e6).toFixed(2) + ' млн ₽';
+  if (a >= 1e6) return sg + (a / 1e6).toFixed(2).replace('.', ',') + ' млн ₽';
   if (a >= 1e3) return sg + Math.round(a / 1e3) + ' тыс ₽';
   return sg + Math.round(a) + ' ₽';
 }
 function fP(n) { return n != null ? Math.round(n) + '%' : '—'; }
 function pc(p) { return p == null ? 'amber' : p >= 110 ? 'green' : p >= 90 ? 'amber' : p >= 70 ? 'orange' : 'red'; }
-function cH(p) { return { green: '#22c55e', amber: '#f59e0b', orange: '#f97316', red: '#ef4444' }[pc(p)]; }
+function cH(p) { return { green: '#3ecf8e', amber: '#ff6a2b', orange: '#f5a524', red: '#f0616a' }[pc(p)]; }
 function bc(p) { return { green: 'bg', amber: 'ba', orange: 'ba', red: 'br' }[pc(p)]; }
 
 function parseCells(str, n) {
@@ -450,7 +423,6 @@ function splitCsvLine(line) {
 // SVOD PARSER (читает СВОД sheet CSV)
 // ══════════════════════════════════════
 function parseSvod(raw) {
-  // Находим секцию СВОД — может быть весь лист или часть
   let sec = raw;
   const si = raw.indexOf('СВОД ,');
   if (si >= 0) {
@@ -474,15 +446,12 @@ function parseSvod(raw) {
     let i = sec.indexOf(quoted);
     if (i < 0) { i = sec.indexOf(label); if (i < 0) return 0; }
     let afterStart = i + (sec[i] === '"' ? quoted.length : label.length);
-    // НЕ стриппим leading commas — они несут позиционную информацию
     const after = sec.slice(afterStart);
     const cs = parseCells(after, 10);
-    // 0 — stripped-формат (одиночный лист CSV), 5/6 — concatenated MCP-формат
     for (const idx of [0, 5, 6, 4, 3, 7, 8, 9]) {
       const v = pN(cs[idx]);
       if (v !== null && v > 0) return v;
     }
-    // Отдельно проверяем 0 на случай если значение равно 0 (корректный ноль)
     const v0 = pN(cs[0]);
     if (v0 !== null) return v0;
     return 0;
@@ -598,46 +567,6 @@ function parseDaily(raw) {
 }
 
 // ══════════════════════════════════════
-// MONTHLY HISTORY PARSER (лист «ФинРез по мес»: помесячный план/факт)
-// gviz CSV: шапка тройками "Мес’ГГ План","Факт","Вып%"; значения вида "1 234 567 ₽".
-// Возвращает массив { ym, marFact, marPlan, chkFact, chkPlan, mach } по месяцам с данными.
-// ══════════════════════════════════════
-function parseMonthlyHistory(raw) {
-  const lines = (raw || '').split(/\r?\n/).map(splitCsvLine);
-  if (lines.length < 2) return null;
-  const hdr = lines[0];
-  const months = [];
-  for (let i = 1; i < hdr.length; i += 3) months.push({ ym: parseYm(hdr[i]), planCol: i, factCol: i + 1 });
-  const num = s => {
-    if (s == null) return null;
-    s = String(s).replace(/[ \s₽"'%]/g, '').replace(/,/g, '');
-    if (s === '') return null;
-    const n = parseFloat(s); return isNaN(n) ? null : n;
-  };
-  const rowExact = lbl => lines.find(r => (r[0] || '').trim() === lbl);
-  const rMar = rowExact('Маржа ВСЕГО без НДС');
-  const rChk = rowExact('Ср чек без НДС');
-  const rMach = rowExact('Обслужено машин');
-  if (!rMar) return null;
-  const out = [];
-  for (const mo of months) {
-    if (!mo.ym) continue;
-    const marFact = num(rMar[mo.factCol]);
-    const marPlan = num(rMar[mo.planCol]);
-    if (marFact == null && marPlan == null) continue;
-    // защита от опечаток/битых ячеек: маржа в разумных пределах
-    if (marFact != null && (marFact < -50e6 || marFact > 100e6)) continue;
-    out.push({
-      ym: mo.ym, marFact, marPlan,
-      chkFact: rChk ? num(rChk[mo.factCol]) : null,
-      chkPlan: rChk ? num(rChk[mo.planCol]) : null,
-      mach: rMach ? num(rMach[mo.factCol]) : null,
-    });
-  }
-  return out.length ? out : null;
-}
-
-// ══════════════════════════════════════
 // FALLBACK: «Сегодня» и «Пайплайн» держат последний заполненный день,
 // пока за текущие сутки данные не загружены.
 // ══════════════════════════════════════
@@ -645,8 +574,6 @@ function applyTodayFallback(sv, daily) {
   if (!daily || !daily.lastDay) return;
   const ld = daily.lastDay;
 
-  // Сегодня пусто, если факт маржи за сегодня (из СВОД) ещё не пришёл.
-  // Тогда «Сегодня» и «Пайплайн» держат последний заполненный день (вчера).
   const todayEmpty = sv.m.factT == null || sv.m.factT === 0;
   if (todayEmpty) {
     sv.m.factT = ld.margNoVat;
@@ -663,32 +590,34 @@ function applyTodayFallback(sv, daily) {
 }
 
 // ══════════════════════════════════════
-// RENDER
+// RENDER — KPI CARDS
 // ══════════════════════════════════════
-function gauge(pct, fact, plan) {
-  const deg = Math.min(Math.max(pct || 0, 0), 150) * 2.4; // guard: отрицательный % (убыточный месяц) не ломает спидометр
+function kpiCard(label, valStr, planStr, pct) {
   const col = cH(pct);
-  return `<div class="gauge" style="background:conic-gradient(${col} ${deg}deg,#1e293b ${deg}deg)">
-    <div class="gauge-inner">
-      <div class="gauge-pct" style="color:${col}">${pct != null ? Math.round(pct) + '%' : '—'}</div>
-      <div class="gauge-lbl">план</div>
+  const p = Math.max(0, Math.min(100, pct || 0));
+  return `<div class="kpi">
+    <div class="kpi-l">
+      <div class="kpi-label">${label}</div>
+      <div class="kpi-val" style="color:${col}">${valStr}</div>
+      <div class="kpi-plan">план <b>${planStr}</b></div>
     </div>
-  </div>
-  <div class="gauge-vals"><span class="gauge-fact" style="color:${col}">${fact}</span><br><span style="color:#94a3b8;font-size:10px">${plan}</span></div>`;
+    <div class="ring" style="--p:${p};--c:${col}"><span>${pct != null ? Math.round(pct) + '%' : '—'}</span></div>
+  </div>`;
 }
-function gp(title, inner) { return `<div class="gpanel"><div class="gpanel-title">${title}</div>${inner}</div>`; }
-
 function renderGauges(sv) {
   document.getElementById('gauges-month').innerHTML =
-    gp('Маржа без НДС', gauge(sv.m.pct, fR(sv.m.fact), fR(sv.m.plan))) +
-    gp('Обслужено машин', gauge(sv.mc.pct, (sv.mc.fact || 0) + ' шт', (sv.mc.plan || 0) + ' шт')) +
-    gp('Средний чек', gauge(sv.ch.pct, fR(sv.ch.fact), fR(sv.ch.plan)));
+    kpiCard('Маржа без НДС', fR(sv.m.fact), fR(sv.m.plan), sv.m.pct) +
+    kpiCard('Обслужено машин', (sv.mc.fact || 0) + ' шт', (sv.mc.plan || 0) + ' шт', sv.mc.pct) +
+    kpiCard('Средний чек', fR(sv.ch.fact), fR(sv.ch.plan), sv.ch.pct);
   document.getElementById('gauges-today').innerHTML =
-    gp('Маржа сегодня', gauge(sv.m.pctT, fR(sv.m.factT), fR(sv.m.planT))) +
-    gp('Машин сегодня', gauge(sv.mc.pctT, (sv.mc.factT || 0) + ' шт', (sv.mc.planT || 0) + ' шт')) +
-    gp('Ср. чек сегодня', gauge(sv.ch.pctT, fR(sv.ch.factT), fR(sv.ch.planT)));
+    kpiCard('Маржа сегодня', fR(sv.m.factT), fR(sv.m.planT), sv.m.pctT) +
+    kpiCard('Машин сегодня', (sv.mc.factT || 0) + ' шт', (sv.mc.planT || 0) + ' шт', sv.mc.pctT) +
+    kpiCard('Ср. чек сегодня', fR(sv.ch.factT), fR(sv.ch.planT), sv.ch.pctT);
 }
 
+// ══════════════════════════════════════
+// RENDER — TABLES
+// ══════════════════════════════════════
 function tr5(lbl, plan, fact, delta, pct, sub) {
   const d = delta || 0;
   const dc = d >= 0 ? 'dpos' : 'dneg';
@@ -696,7 +625,7 @@ function tr5(lbl, plan, fact, delta, pct, sub) {
   if (typeof delta === 'number') {
     const abs = Math.abs(d);
     const sg = d >= 0 ? '+' : '−';
-    if (abs >= 1e6) dStr = sg + (abs / 1e6).toFixed(2) + ' млн ₽';
+    if (abs >= 1e6) dStr = sg + (abs / 1e6).toFixed(2).replace('.', ',') + ' млн ₽';
     else if (abs >= 1e3) dStr = sg + Math.round(abs / 1e3) + ' тыс ₽';
     else if (abs >= 1 && String(plan).includes('₽')) dStr = sg + Math.round(abs) + ' ₽';
     else dStr = (d >= 0 ? '+' : '') + Math.round(d);
@@ -706,10 +635,6 @@ function tr5(lbl, plan, fact, delta, pct, sub) {
   return `<tr class="${sub ? 'sub-row' : ''}">
     <td>${lbl}</td><td>${plan}</td><td><strong>${fact}</strong></td>
     <td><span class="${dc}">${dStr}</span></td>
-    <td><span class="badge ${bc(pct)}">${fP(pct)}</span></td></tr>`;
-}
-function tr4(lbl, plan, fact, pct) {
-  return `<tr><td>${lbl}</td><td>${plan}</td><td><strong>${fact}</strong></td>
     <td><span class="badge ${bc(pct)}">${fP(pct)}</span></td></tr>`;
 }
 
@@ -727,6 +652,9 @@ function renderTables(sv) {
     tr5('Средний чек без НДС', fR(ch.planT), fR(ch.factT), ch.factT - ch.planT, ch.pctT);
 }
 
+// ══════════════════════════════════════
+// RENDER — PIPELINE
+// ══════════════════════════════════════
 function renderPipeline(sv) {
   const { pipe: p, m } = sv;
   const remaining = Math.max(0, (m.plan || 0) - (m.fact || 0));
@@ -736,59 +664,58 @@ function renderPipeline(sv) {
       <div class="plabel">🔧 В работе</div>
       <span class="pcount">${p.workSht}</span><span class="punit">машин</span>
       <div class="pamount">${fR(p.workRub)}</div>
-      <div class="pbar"><div class="pfill" style="width:${Math.min(100, p.workSht * 8)}%;background:linear-gradient(90deg,#3b82f6,#8b5cf6)"></div></div>
+      <div class="pbar"><div class="pfill" style="width:${Math.min(100, p.workSht * 8)}%;background:linear-gradient(90deg,#ff6a2b,#e8551a)"></div></div>
     </div>
     <div class="pipe-item">
       <div class="plabel">⏳ На согласовании</div>
-      <span class="pcount" style="color:${p.soglSht > 0 ? '#f59e0b' : '#475569'}">${p.soglSht}</span><span class="punit">машин</span>
-      <div class="pamount" style="color:${p.soglRub > 0 ? '#f59e0b' : '#475569'}">${p.soglRub > 0 ? fR(p.soglRub) : '—'}</div>
-      <div class="pbar"><div class="pfill" style="width:${Math.min(100, p.soglSht * 15)}%;background:#f59e0b"></div></div>
+      <span class="pcount" style="color:${p.soglSht > 0 ? '#f5a524' : '#6b7280'}">${p.soglSht}</span><span class="punit">машин</span>
+      <div class="pamount" style="color:${p.soglRub > 0 ? '#f5a524' : '#6b7280'}">${p.soglRub > 0 ? fR(p.soglRub) : '—'}</div>
+      <div class="pbar"><div class="pfill" style="width:${Math.min(100, p.soglSht * 15)}%;background:#f5a524"></div></div>
     </div>
     <div class="pipe-item">
       <div class="plabel">📋 В очереди</div>
-      <span class="pcount" style="color:${p.queueSht > 0 ? '#8b5cf6' : '#475569'}">${p.queueSht}</span><span class="punit">машин</span>
-      <div class="pbar"><div class="pfill" style="width:${Math.min(100, p.queueSht * 20)}%;background:#8b5cf6"></div></div>
+      <span class="pcount" style="color:${p.queueSht > 0 ? '#a78bfa' : '#6b7280'}">${p.queueSht}</span><span class="punit">машин</span>
+      <div class="pbar"><div class="pfill" style="width:${Math.min(100, p.queueSht * 20)}%;background:#a78bfa"></div></div>
     </div>
     <div class="mprog">
       <div class="mptitle">Прогресс месяца</div>
       <div class="mprow"><span class="mplabel">Маржа · выполнение</span><span class="mpval" style="color:${cH(pctD)}">${fP(pctD)}</span></div>
       <div class="mpbar"><div class="mpfill" style="width:${Math.min(100, pctD)}%;background:${cH(pctD)}"></div></div>
-      ${remaining > 0 ? `<div class="mpnote">До плана: ${fR(remaining)}</div>` : '<div class="mpnote" style="color:#22c55e">✓ План выполнен</div>'}
+      ${remaining > 0 ? `<div class="mpnote">До плана: <b style="color:var(--text)">${fR(remaining)}</b></div>` : '<div class="mpnote" style="color:#3ecf8e">✓ План выполнен</div>'}
     </div>`;
 }
 
 // ══════════════════════════════════════
-// COMPARISON CARDS
-// Текущий месяц (live, нарастающим) vs предыдущий завершённый (из MONTHLY_HISTORY).
-// Всё вычисляется от даты листа СВОД — при смене месяца сдвигается само.
+// RENDER — COMPARISON CARDS
 // ══════════════════════════════════════
 function renderComparison(sv, daily) {
-  const cur = currentYM(sv);
-  const dayNum = currentDay(sv);
-  const daysInMonth = daysInMonthOf(cur.y, cur.m);
-  const daysLeft = Math.max(0, daysInMonth - dayNum);
-  const curName = monthName(cur.m);
+  // Исторические данные (зафиксированы)
+  const HIST = {
+    apr: { fact: 5177902, plan: 6699000, days: 30 },
+    mar: { fact: 4431960, plan: 3978000, days: 31 },
+  };
 
-  const curFact = sv.m.fact || 0;
-  // Полный план месяца — из D12 листа ФинРез По суткам (если есть), иначе из СВОД
-  const curPlan = (daily && daily.monthPlanMargin) ? daily.monthPlanMargin : (sv.m.plan || 0);
+  const mayFact  = sv.m.fact  || 0;
+  const mayPlan  = (daily && daily.monthPlanMargin) ? daily.monthPlanMargin : (sv.m.plan || 0);
 
-  // Предыдущий завершённый месяц
-  const prev = prevMonthRec(cur);
-  const prevFact = prev ? (prev.rec.marFact || 0) : 0;
-  const prevName = prev ? monthName(prev.m) : '—';
-  const prevDays = prev ? daysInMonthOf(prev.y, prev.m) : 30;
-  const prevToSameDay = prevFact > 0 ? Math.round(prevFact / prevDays * dayNum) : 0;
+  let dayNum = new Date().getDate();
+  if (sv.date) {
+    const p = sv.date.split('/');
+    if (p.length >= 2) dayNum = parseInt(p[1]) || dayNum;
+  }
+  const daysInMonth = 31; // май
+  const daysLeft    = daysInMonth - dayNum;
 
-  // Проекция конца месяца (при текущем темпе)
-  const dailyAvg  = dayNum > 0 ? curFact / dayNum : 0;
-  const projected = Math.round(curFact + dailyAvg * daysLeft);
-  const projVsPlan = curPlan > 0 ? projected / curPlan * 100 : null;
+  const aprToSameDay = Math.round(HIST.apr.fact / HIST.apr.days * dayNum);
+
+  const dailyAvg   = dayNum > 0 ? mayFact / dayNum : 0;
+  const projected  = Math.round(mayFact + dailyAvg * daysLeft);
+  const projVsPlan = mayPlan > 0 ? projected / mayPlan * 100 : null;
 
   function cmpCard(label, mainVal, mainLbl, refVal, refLbl, showBar) {
     const ratio = refVal > 0 ? mainVal / refVal * 100 : null;
     const delta = mainVal - refVal;
-    const col   = ratio == null ? '#94a3b8' : ratio >= 100 ? '#22c55e' : ratio >= 80 ? '#f59e0b' : '#ef4444';
+    const col   = ratio == null ? '#9097a3' : ratio >= 100 ? '#3ecf8e' : ratio >= 80 ? '#ff6a2b' : '#f0616a';
     const arrow = ratio == null ? '→' : ratio >= 100 ? '↑' : '↓';
     const bar   = Math.min(100, ratio || 0);
     return `<div class="cmp-card">
@@ -800,7 +727,7 @@ function renderComparison(sv, daily) {
         </div>
         <div class="cmp-arrow" style="color:${col}">${arrow}</div>
         <div class="cmp-ref">
-          <div class="cmp-ref-val" style="color:var(--muted)">${fR(refVal)}</div>
+          <div class="cmp-ref-val">${fR(refVal)}</div>
           <div class="cmp-ref-lbl">${refLbl}</div>
         </div>
       </div>
@@ -812,127 +739,118 @@ function renderComparison(sv, daily) {
     </div>`;
   }
 
-  // Карточка 3 — Выполнение плана + проекция
-  const pctDone   = curPlan > 0 ? curFact / curPlan * 100 : null;
+  const pctDone   = mayPlan > 0 ? mayFact / mayPlan * 100 : null;
   const planCol   = cH(pctDone);
   const planBar   = Math.min(100, pctDone || 0);
-  const toPlan    = curPlan - curFact; // сколько ещё нужно до плана (минус = перевыполнен)
+  const toPlan    = mayPlan - mayFact;
   const toPlanHtml = toPlan > 0
     ? `Осталось до плана: <strong style="color:${planCol}">${fR(toPlan)}</strong>`
-    : `<strong style="color:#22c55e">✓ План выполнен · +${fR(Math.abs(toPlan))}</strong>`;
+    : `<strong style="color:#3ecf8e">✓ План выполнен · +${fR(Math.abs(toPlan))}</strong>`;
   const card3 = `<div class="cmp-card">
-    <div class="cmp-label">Выполнение плана · ${curName}</div>
-    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+    <div class="cmp-label">Выполнение плана · ${(sv.period || 'месяц')}</div>
+    <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:6px">
       <div class="plan-big" style="color:${planCol}">${fP(pctDone)}</div>
-      <div style="font-size:12px;color:var(--muted)">от плана ${fR(curPlan)}</div>
+      <div style="font-size:12px;color:var(--muted);font-weight:600">от плана ${fR(mayPlan)}</div>
     </div>
-    <div class="cmp-bar-wrap" style="margin:6px 0 10px">
+    <div class="cmp-bar-wrap" style="margin:8px 0 12px">
       <div class="cmp-bar" style="width:${planBar}%;background:${planCol}"></div>
     </div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:6px">
-      Факт: <strong style="color:${planCol}">${fR(curFact)}</strong>
-      &nbsp;·&nbsp; Осталось дней: <strong>${daysLeft}</strong>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:8px;font-weight:600">
+      Факт: <strong style="color:${planCol}">${fR(mayFact)}</strong>
+      &nbsp;·&nbsp; Осталось дней: <strong style="color:var(--text)">${daysLeft}</strong>
     </div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;padding:6px 8px;background:var(--bg3);border-radius:7px">
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px;padding:9px 11px;background:var(--card2);border-radius:11px;font-weight:600">
       ${toPlanHtml}
     </div>
     <div class="proj-row">
       <div>
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Проекция конца месяца</div>
-        <div style="font-size:14px;font-weight:700;color:${projVsPlan && projVsPlan >= 100 ? '#22c55e' : '#f59e0b'};margin-top:3px">${fR(projected)}</div>
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700">Проекция конца месяца</div>
+        <div style="font-family:'Unbounded';font-size:15px;font-weight:700;color:${projVsPlan && projVsPlan >= 100 ? '#3ecf8e' : '#ff6a2b'};margin-top:4px">${fR(projected)}</div>
       </div>
       <div style="text-align:right">
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)">Прогноз vs план</div>
-        <div style="font-size:14px;font-weight:700;color:${projVsPlan && projVsPlan >= 100 ? '#22c55e' : '#f59e0b'};margin-top:3px">${fP(projVsPlan)}</div>
+        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:700">Прогноз vs план</div>
+        <div style="font-family:'Unbounded';font-size:15px;font-weight:700;color:${projVsPlan && projVsPlan >= 100 ? '#3ecf8e' : '#ff6a2b'};margin-top:4px">${fP(projVsPlan)}</div>
       </div>
     </div>
   </div>`;
 
   document.getElementById('cmp-row').innerHTML =
     cmpCard(
-      `${curName} (1–${dayNum}) vs ${prevName} (весь месяц)`,
-      curFact, `${curName} нарастающий (${dayNum} дн.)`,
-      prevFact, `${prevName} · итог месяца`, true
+      `Текущий (1–${dayNum}) vs Апрель (весь месяц)`,
+      mayFact, `Текущий нарастающий (${dayNum} дн.)`,
+      HIST.apr.fact, 'Апрель · итог месяца', true
     ) +
     cmpCard(
-      `${curName} (1–${dayNum}) vs ${prevName} (1–${dayNum})`,
-      curFact, `${curName} нарастающий`,
-      prevToSameDay, `${prevName} до ${dayNum}-го числа`, true
+      `Текущий (1–${dayNum}) vs Апрель (1–${dayNum})`,
+      mayFact, `Текущий нарастающий`,
+      aprToSameDay, `Апрель до ${dayNum}-го числа`, true
     ) +
     card3;
 }
 
 // ══════════════════════════════════════
-// MONTHLY CHARTS
-// Скользящее окно: последние MONTHLY_WINDOW закрытых месяцев (из истории) + текущий (live).
-// Новый закрытый месяц появляется сам, как только попадёт в MONTHLY_HISTORY.
+// RENDER — MONTHLY CHARTS
 // ══════════════════════════════════════
 function renderMonthly(sv, daily) {
-  const cur = currentYM(sv);
-  const curName = monthName(cur.m);
-  // План текущего месяца — ИТОГОВЫЙ план (не нарастающий). D12 листа ФинРез По суткам; иначе СВОД.
+  const months = ['Февраль', 'Март', 'Апрель', 'Текущий*'];
   const fullPlan = (daily && daily.monthPlanMargin) ? daily.monthPlanMargin : (sv.m.plan || 0);
-
-  // Последние закрытые месяцы (из живой истории) + текущий
-  const closed = closedMonths(cur).slice(-MONTHLY_WINDOW);
-  const lastChkPlan = closed.length ? (closed[closed.length - 1].chkPlan || 0) : 0;
-
-  const months = closed.map(r => monthName(+r.ym.split('-')[1])).concat(curName + '*');
-  const pM = closed.map(r => r.marPlan || 0).concat(fullPlan);
-  const fM = closed.map(r => r.marFact || 0).concat(sv.m.fact || 0);
-  const pC = closed.map(r => r.chkPlan || 0).concat(sv.ch.plan || lastChkPlan);
-  const fC = closed.map(r => r.chkFact || 0).concat(sv.ch.fact || 0);
+  const pM = [2904000, 3978000, 6699000, fullPlan];
+  const fM = [2791281, 4431960, 5177902, sv.m.fact || 0];
+  const pC = [24000, 26000, 29000, sv.ch.plan || 29000];
+  const fC = [25331, 32829, 33406, sv.ch.fact || 0];
   const pts = pM.map((p, i) => p > 0 ? fM[i] / p : null);
 
-  const subM = document.getElementById('csub-monthly');
-  if (subM && months.length) subM.textContent = `${months[0]} – ${curName} · план = итог месяца, текущий — нарастающим`;
-
-  upsertChart('m', 'cMonthly', {
+  if (CH.m) CH.m.destroy();
+  CH.m = new Chart(document.getElementById('cMonthly'), {
     type: 'bar',
     data: {
       labels: months, datasets: [
-        { label: 'План', data: pM, backgroundColor: '#1e293b', borderColor: '#475569', borderWidth: 1, borderRadius: 5, borderSkipped: false },
+        { label: 'План', data: pM, backgroundColor: '#1b1f28', borderColor: '#3a4150', borderWidth: 1, borderRadius: 6, borderSkipped: false },
         {
           label: 'Факт', data: fM,
-          backgroundColor: pts.map(p => p == null ? '#334155' : p >= 1.05 ? '#052e16' : p >= 0.9 ? '#451a03' : '#450a0a'),
-          borderColor: pts.map(p => p == null ? '#475569' : p >= 1.05 ? '#22c55e' : p >= 0.9 ? '#f59e0b' : '#ef4444'),
-          borderWidth: 2, borderRadius: 5, borderSkipped: false
+          backgroundColor: pts.map(p => p == null ? '#262b36' : p >= 1.05 ? 'rgba(62,207,142,.18)' : p >= 0.9 ? 'rgba(255,106,43,.18)' : 'rgba(240,97,106,.18)'),
+          borderColor: pts.map(p => p == null ? '#3a4150' : p >= 1.05 ? '#3ecf8e' : p >= 0.9 ? '#ff6a2b' : '#f0616a'),
+          borderWidth: 2, borderRadius: 6, borderSkipped: false
         }
       ]
     },
     options: {
       responsive: true, plugins: {
-        legend: { labels: { boxWidth: 10, font: { size: 10 } } },
+        legend: { labels: { boxWidth: 10, font: { size: 11 }, color: '#9097a3' } },
         tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${(ctx.raw / 1e6).toFixed(2)} млн ₽` } }
       },
       scales: {
-        x: { grid: { color: '#1e293b' } },
-        y: { grid: { color: '#1e293b' }, ticks: { callback: v => (v / 1e6).toFixed(1) + ' млн' } }
+        x: { grid: { color: '#1b1f28' } },
+        y: { grid: { color: '#1b1f28' }, ticks: { callback: v => (v / 1e6).toFixed(1) + ' млн' } }
       }
     }
   });
 
-  upsertChart('c', 'cCheck', {
+  if (CH.c) CH.c.destroy();
+  CH.c = new Chart(document.getElementById('cCheck'), {
     type: 'line',
     data: {
       labels: months, datasets: [
-        { label: 'Факт', data: fC, borderColor: '#f59e0b', backgroundColor: '#f59e0b18', borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: '#f59e0b', fill: true, tension: 0.3 },
-        { label: 'План', data: pC, borderColor: '#475569', borderWidth: 1.5, borderDash: [4, 4], pointRadius: 3, pointBackgroundColor: '#475569', fill: false, tension: 0.3 }
+        { label: 'Факт', data: fC, borderColor: '#ff6a2b', backgroundColor: 'rgba(255,106,43,.10)', borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: '#ff6a2b', fill: true, tension: 0.3 },
+        { label: 'План', data: pC, borderColor: '#6b7280', borderWidth: 1.5, borderDash: [4, 4], pointRadius: 3, pointBackgroundColor: '#6b7280', fill: false, tension: 0.3 }
       ]
     },
     options: {
       responsive: true, plugins: {
-        legend: { labels: { boxWidth: 10, font: { size: 10 } } },
-        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${Math.round(ctx.raw).toLocaleString()} ₽` } }
+        legend: { labels: { boxWidth: 10, font: { size: 11 }, color: '#9097a3' } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${Math.round(ctx.raw).toLocaleString('ru')} ₽` } }
       },
       scales: {
-        x: { grid: { color: '#1e293b' } },
-        y: { grid: { color: '#1e293b' }, ticks: { callback: v => (v / 1000).toFixed(0) + ' тыс' }, min: 0 }
+        x: { grid: { color: '#1b1f28' } },
+        y: { grid: { color: '#1b1f28' }, ticks: { callback: v => (v / 1000).toFixed(0) + ' тыс' }, min: 0 }
       }
     }
   });
 }
 
+// ══════════════════════════════════════
+// RENDER — DAILY
+// ══════════════════════════════════════
 function renderDaily(daily, sv) {
   if (!daily || !daily.dailyMargin.length) return;
   const n = Math.max(daily.dailyMargin.length, daily.dailyCars.length);
@@ -940,7 +858,7 @@ function renderDaily(daily, sv) {
   const cars = daily.dailyCars.slice(0, n);
   while (margins.length < n) margins.push(0);
   while (cars.length < n) cars.push(0);
-  const planDay = daily.numDays ? (sv.m.plan || 0) / daily.numDays : 0;
+  const planDay = (sv.m.plan || 0) / daily.numDays;
   const maxM = Math.max(...margins);
   const maxDay = margins.indexOf(maxM) + 1;
   const avg = margins.reduce((a, b) => a + b, 0) / margins.length;
@@ -950,28 +868,29 @@ function renderDaily(daily, sv) {
   document.getElementById('daily-card').style.display = '';
   document.getElementById('daily-sub').textContent = `Факт по дням · ${n} дней · пунктир = дневной план (${fR(planDay)})`;
   document.getElementById('daily-stats').innerHTML = `
-    <div><div class="dstat-l">Лучший день</div><div class="dstat-v" style="color:#22c55e">${maxDay} числа</div><div class="dstat-s">${fR(maxM)}</div></div>
-    <div><div class="dstat-l">Среднее/день</div><div class="dstat-v" style="color:#f59e0b">${fR(avg)}</div><div class="dstat-s">план: ${fR(planDay)}</div></div>
-    <div><div class="dstat-l">Выше плана</div><div class="dstat-v" style="color:#3b82f6">${above} из ${n}</div><div class="dstat-s">${Math.round(above / n * 100)}%</div></div>
+    <div><div class="dstat-l">Лучший день</div><div class="dstat-v" style="color:#3ecf8e">${maxDay} числа</div><div class="dstat-s">${fR(maxM)}</div></div>
+    <div><div class="dstat-l">Среднее/день</div><div class="dstat-v" style="color:#ff6a2b">${fR(avg)}</div><div class="dstat-s">план: ${fR(planDay)}</div></div>
+    <div><div class="dstat-l">Выше плана</div><div class="dstat-v" style="color:#a78bfa">${above} из ${n}</div><div class="dstat-s">${Math.round(above / n * 100)}%</div></div>
     <div><div class="dstat-l">Сегодня</div><div class="dstat-v" style="color:${cH(sv.m.pctT)}">${fR(sv.m.factT)}</div><div class="dstat-s">${sv.mc.factT || 0} машин</div></div>`;
 
-  upsertChart('d', 'cDaily', {
+  if (CH.d) CH.d.destroy();
+  CH.d = new Chart(document.getElementById('cDaily'), {
     type: 'bar',
     data: {
       labels: Array.from({ length: n }, (_, i) => i + 1), datasets: [
         {
           label: 'Маржа без НДС', data: margins,
-          backgroundColor: margins.map(v => v >= planDay ? '#052e16' : v >= planDay * .6 ? '#451a03' : '#450a0a'),
-          borderColor: margins.map(v => v >= planDay ? '#22c55e' : v >= planDay * .6 ? '#f59e0b' : '#ef4444'),
-          borderWidth: 1.5, borderRadius: 3, yAxisID: 'y', order: 2
+          backgroundColor: margins.map(v => v >= planDay ? 'rgba(62,207,142,.18)' : v >= planDay * .6 ? 'rgba(255,106,43,.18)' : 'rgba(240,97,106,.18)'),
+          borderColor: margins.map(v => v >= planDay ? '#3ecf8e' : v >= planDay * .6 ? '#ff6a2b' : '#f0616a'),
+          borderWidth: 1.5, borderRadius: 4, yAxisID: 'y', order: 2
         },
-        { label: 'ТС шт', data: cars, type: 'line', borderColor: '#8b5cf6', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#8b5cf6', tension: 0.3, yAxisID: 'y2', order: 1 },
-        { label: 'Дневной план', data: Array(n).fill(planDay), type: 'line', borderColor: '#f59e0b', borderWidth: 1.5, borderDash: [5, 4], pointRadius: 0, yAxisID: 'y', order: 0, fill: false }
+        { label: 'ТС шт', data: cars, type: 'line', borderColor: '#a78bfa', backgroundColor: 'transparent', borderWidth: 2, pointRadius: 3, pointBackgroundColor: '#a78bfa', tension: 0.3, yAxisID: 'y2', order: 1 },
+        { label: 'Дневной план', data: Array(n).fill(planDay), type: 'line', borderColor: '#ff6a2b', borderWidth: 1.5, borderDash: [5, 4], pointRadius: 0, yAxisID: 'y', order: 0, fill: false }
       ]
     },
     options: {
       responsive: true, interaction: { mode: 'index' }, plugins: {
-        legend: { labels: { boxWidth: 10, font: { size: 10 } } },
+        legend: { labels: { boxWidth: 10, font: { size: 11 }, color: '#9097a3' } },
         tooltip: {
           callbacks: {
             label: ctx => {
@@ -983,8 +902,8 @@ function renderDaily(daily, sv) {
         }
       },
       scales: {
-        x: { grid: { color: '#1e293b' }, ticks: { font: { size: 9 } } },
-        y: { position: 'left', grid: { color: '#1e293b' }, ticks: { callback: v => (v / 1000).toFixed(0) + ' тыс' } },
+        x: { grid: { color: '#1b1f28' }, ticks: { font: { size: 9 } } },
+        y: { position: 'left', grid: { color: '#1b1f28' }, ticks: { callback: v => (v / 1000).toFixed(0) + ' тыс' } },
         y2: { position: 'right', grid: { drawOnChartArea: false }, ticks: { callback: v => v + ' шт', stepSize: 2 }, min: 0, max: 18 }
       }
     }
@@ -994,21 +913,29 @@ function renderDaily(daily, sv) {
 // ══════════════════════════════════════
 // FETCH
 // ══════════════════════════════════════
-async function fetchAttempts(attempts, validate) {
+async function fetchCsv(gid, validate) {
+  if (!gid) {
+    throw new Error('Не задан GID листа. Впиши GID листа «СВОД» в настройках (GID_SVOD).');
+  }
+  const direct = directUrl(gid);
   let lastErr = null;
+
+  const attempts = [];
+  if (PUB_ID) attempts.push(pubUrl(gid));
+  attempts.push(...PROXIES.slice(1).map(fn => fn(direct)));
+  attempts.push(PROXIES[0](direct));
+
   for (let i = 0; i < attempts.length; i++) {
     const url = attempts[i];
     try {
       const res = await fetch(url, { cache: 'no-store', signal: AbortSignal.timeout(8000) });
       if (!res.ok) { lastErr = new Error(`HTTP ${res.status} (источник ${i+1})`); continue; }
       const text = await res.text();
-      // Логин Google вместо CSV → нет публичного доступа
       if (text.includes('<!DOCTYPE') || text.includes('<html')) {
         lastErr = new Error(`Нет публичного доступа к таблице (источник ${i+1})`);
         continue;
       }
       if (text.length < 50) { lastErr = new Error(`Пустой ответ (источник ${i+1})`); continue; }
-      // Проверка что пришёл именно нужный лист, а не другой / не битый
       if (validate && !validate(text)) {
         lastErr = new Error(`Получен не тот лист или неполные данные (источник ${i+1})`);
         continue;
@@ -1020,23 +947,12 @@ async function fetchAttempts(attempts, validate) {
       console.warn(lastErr.message);
     }
   }
+
   throw new Error(
     'Не удалось загрузить данные.\n' +
     'Открой доступ к таблице: Настройки доступа → «Все, у кого есть ссылка» → Читатель.\n' +
     'Последняя ошибка: ' + (lastErr?.message || '?')
   );
-}
-// Цепочка источников для произвольного URL: рабочие прокси, прямой запрос — последним
-function proxyAttempts(targetUrl) {
-  return [...PROXIES.slice(1).map(fn => fn(targetUrl)), PROXIES[0](targetUrl)];
-}
-function fetchViaProxies(targetUrl, validate) { return fetchAttempts(proxyAttempts(targetUrl), validate); }
-
-async function fetchCsv(gid, validate) {
-  if (!gid) throw new Error('Не задан GID листа. Впиши GID листа «СВОД» в настройках (GID_SVOD).');
-  const direct = directUrl(gid);
-  const attempts = PUB_ID ? [pubUrl(gid), ...proxyAttempts(direct)] : proxyAttempts(direct);
-  return fetchAttempts(attempts, validate);
 }
 
 // ══════════════════════════════════════
@@ -1092,7 +1008,6 @@ function showLoading(txt) {
 }
 
 function showError(msg, detail) {
-  const ld = document.getElementById('live-dot'); if (ld) ld.style.background = '#64748b'; // серая точка — данные не обновились
   const noAccess = /доступ|HTML|403|401|GID/i.test(msg + ' ' + (detail || ''));
   document.getElementById('setup-banner').style.display = noAccess ? 'block' : 'none';
   document.getElementById('loading').innerHTML = `
@@ -1109,32 +1024,23 @@ async function load() {
   if (icon) { icon.className = 'spin'; icon.textContent = '↺'; }
 
   try {
-    // Грузим три листа ПАРАЛЛЕЛЬНО (а не по очереди) — втрое быстрее на медленных прокси.
-    showLoading('Загружаю данные из Google Sheets…');
-    const [svodR, dailyR, histR] = await Promise.allSettled([
-      fetchCsv(GID_SVOD,  t => t.includes('Обслужено машин') && t.includes('Маржа ВСЕГО без НДС')),
-      fetchCsv(GID_DAILY, t => t.includes('Маржа ВСЕГО без НДС') && t.length > 1500),
-      fetchViaProxies(gvizCsvUrl(SHEET_HISTORY), t => t.includes('Маржа ВСЕГО без НДС') && t.includes('Обслужено машин')),
-    ]);
+    showLoading('Загружаю лист СВОД…');
+    let svodCsv, dailyCsv = null;
 
-    if (svodR.status !== 'fulfilled') throw svodR.reason; // СВОД обязателен — без него дашборда нет
-    const svodCsv = svodR.value;
-    const dailyCsv = dailyR.status === 'fulfilled' ? dailyR.value : null;
-    if (dailyR.status !== 'fulfilled') console.warn('ФинРез По суткам недоступен:', dailyR.reason && dailyR.reason.message);
+    svodCsv = await fetchCsv(GID_SVOD, t => t.includes('Обслужено машин') && t.includes('Маржа ВСЕГО без НДС'));
+
+    try {
+      showLoading('Загружаю суточную статистику…');
+      dailyCsv = await fetchCsv(GID_DAILY, t => t.includes('Маржа ВСЕГО без НДС') && t.length > 1500);
+    } catch (e) {
+      console.warn('Не удалось загрузить ФинРез По суткам:', e.message);
+    }
 
     const sv = parseSvod(svodCsv);
     if (!sv || sv.m.plan == null) throw new Error('Данные СВОД не распознаны. Проверьте публикацию листа.');
 
     const daily = dailyCsv ? parseDaily(dailyCsv) : null;
-    // Если daily не получили из отдельного листа — пробуем из СВОД CSV
     const daily2 = daily || (svodCsv.indexOf('ФинРез По суткам') >= 0 ? parseDaily(svodCsv) : null);
-
-    // История по месяцам — из того же параллельного запроса. Резерв — встроенный конфиг.
-    if (histR.status === 'fulfilled') {
-      const parsed = parseMonthlyHistory(histR.value);
-      if (parsed && parsed.length >= 2) { ACTIVE_HISTORY = parsed; console.log('✓ История по мес из таблицы:', parsed.length, 'мес'); }
-      else console.warn('История по мес: распознано <2 мес — оставляю встроенный конфиг');
-    } else { console.warn('История по мес недоступна, использую встроенный конфиг:', histR.reason && histR.reason.message); }
 
     // Fallback: «Сегодня» и «Пайплайн» держат последний заполненный день, пока сегодня пусто
     applyTodayFallback(sv, daily2);
@@ -1143,9 +1049,7 @@ async function load() {
     document.getElementById('h-period').textContent = (per ? per.charAt(0).toUpperCase() + per.slice(1) : '—') + ' 2026';
     document.getElementById('h-date').textContent = 'Данные на ' + (sv.date || new Date().toLocaleDateString('ru'));
 
-    // ВАЖНО: сначала показываем контейнер, потом строим графики. Иначе Chart.js
-    // создаётся в скрытом блоке (display:none) нулевой ширины и схлопывается в полоску
-    // — особенно в grid-сетке «Динамика по месяцам».
+    // #app видимым ДО построения графиков (иначе Chart.js схлопывает canvas в полоску)
     document.getElementById('loading').style.display = 'none';
     document.getElementById('app').style.display = 'block';
     document.getElementById('setup-banner').style.display = 'none';
@@ -1161,22 +1065,18 @@ async function load() {
     const slabelToday = document.getElementById('slabel-today');
     const titleToday  = document.getElementById('title-today-detail');
     const pipeTitle   = document.getElementById('pipe-title');
-    // «Живой» индикатор: зелёный = данные за сегодня; жёлтый = показан прошлый день (ждём сегодня)
-    const liveDot = document.getElementById('live-dot');
-    if (liveDot) liveDot.style.background = sv.todayFallbackDay ? '#f59e0b' : '#22c55e';
     if (sv.todayFallbackDay) {
       const tag = ` <span class="stale">⏳ ждём сегодня · показан ${sv.todayFallbackDay}-й день</span>`;
       if (slabelToday) slabelToday.innerHTML = 'Сегодня' + tag;
-      if (titleToday)  titleToday.innerHTML  = `Сегодня <span style="color:#f59e0b;font-weight:600">(данные за ${sv.todayFallbackDay}-й день)</span>`;
-      if (pipeTitle)   pipeTitle.innerHTML   = `Пайплайн · на ${sv.todayFallbackDay}-й день <span style="color:#f59e0b;font-size:10px">(ждём сегодня)</span>`;
+      if (titleToday)  titleToday.innerHTML  = `Сегодня <span style="color:#ff6a2b;font-weight:700">(данные за ${sv.todayFallbackDay}-й день)</span>`;
+      if (pipeTitle)   pipeTitle.innerHTML   = `Пайплайн · на ${sv.todayFallbackDay}-й день <span style="color:#ff6a2b;font-size:10px">(ждём сегодня)</span>`;
     } else {
       if (slabelToday) slabelToday.textContent = 'Сегодня';
       if (titleToday)  titleToday.textContent  = 'Сегодня';
       if (pipeTitle)   pipeTitle.textContent   = 'Пайплайн · прямо сейчас';
     }
 
-    // Подстраховка: после layout переразмерить графики под реальную ширину контейнеров
-    requestAnimationFrame(() => { ['m', 'c', 'd'].forEach(k => { if (CH[k] && CH[k].resize) CH[k].resize(); }); });
+    requestAnimationFrame(() => { Object.values(CH).forEach(c => { try { c.resize(); } catch (e) {} }); });
 
     if (document.getElementById('autoRefreshToggle').checked) startCountdown();
 
