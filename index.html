@@ -170,6 +170,26 @@ canvas{max-width:100%}
 .dstat-v{font-family:'Unbounded';font-size:16px;font-weight:700;margin-top:3px}
 .dstat-s{font-size:10px;color:var(--muted);margin-top:2px;font-weight:600}
 
+/* OPEN ORDERS (блок 6) */
+.open-table th:nth-child(4),.open-table td:nth-child(4){text-align:right;white-space:nowrap}
+.open-table th:last-child,.open-table td:last-child{text-align:right;white-space:nowrap}
+.open-table td:first-child{color:var(--text);font-size:12px}
+.onum{font-weight:800;white-space:nowrap}
+.oclient{display:inline-block;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+.omach{color:var(--text)}
+.omodel{color:var(--muted);font-weight:600}
+.odate{color:var(--muted);font-weight:600;font-size:11.5px}
+.plate{display:inline-block;margin-left:8px;padding:2px 7px;border:1px solid var(--border2);border-radius:6px;background:var(--card3);font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--muted);white-space:nowrap;vertical-align:1px}
+.own-chip{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:rgba(167,139,250,.12);color:#c4b0fd;font-size:10.5px;font-weight:800;white-space:nowrap}
+.own-chip::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--purple)}
+.dchip{display:inline-block;min-width:56px;text-align:center;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:800}
+.dchip.g{background:var(--green-soft);color:#5fe0a8}
+.dchip.a{background:var(--amber-soft);color:#f5c97a}
+.dchip.r{background:var(--red-soft);color:#f0616a}
+.open-more{display:block;width:100%;margin-top:12px;padding:11px;background:var(--card2);border:1px solid var(--border2);border-radius:12px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:'Manrope';transition:.2s}
+.open-more:hover{border-color:var(--accent);color:var(--accent)}
+.open-empty{padding:26px 10px;text-align:center;color:var(--muted);font-size:13px;font-weight:600}
+
 /* COUNTDOWN */
 .refresh-bar{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:18px;font-size:12px;color:var(--muted);font-weight:600}
 .rbar-fill{height:4px;background:var(--card3);border-radius:3px;flex:1;overflow:hidden}
@@ -317,15 +337,17 @@ canvas{max-width:100%}
     </div>
   </div>
 
-  <div class="shead" id="daily-head" style="display:none">
+  <div class="shead">
     <div class="snum">6</div>
-    <div><div class="stitle">Суточная динамика</div><div class="ssub">Ежедневная маржа без НДС и обслуженные ТС</div></div>
+    <div><div class="stitle">Открытые заказ-наряды</div><div class="ssub" id="open-sub">Все незакрытые ЗН · закрылся — пропал из списка</div></div>
   </div>
-  <div class="card" id="daily-card" style="display:none">
-    <div class="ctitle">Ежедневная маржа без НДС</div>
-    <div class="csub" id="daily-sub">—</div>
-    <div class="daily-stats" id="daily-stats"></div>
-    <canvas id="cDaily" height="150"></canvas>
+  <div class="card">
+    <div class="daily-stats" id="open-stats"></div>
+    <table class="ctable open-table">
+      <thead><tr><th>№ ЗН</th><th>Клиент</th><th>Машина</th><th>Открыт</th><th>Дней открыт</th></tr></thead>
+      <tbody id="open-tbody"></tbody>
+    </table>
+    <div id="open-more-wrap"></div>
   </div>
 
 </div>
@@ -340,6 +362,7 @@ const SHEET_ID  = '1-r4datyaZgx6UkLObV0t78sQfLpWIsypKayFyeP-9io';
 const GID_SVOD  = '8846691';      // лист «СВОД»
 const GID_DAILY = '902143223';    // лист «ФинРез По суткам»
 const SHEET_MES = 'ФинРез по мес';// лист помесячной истории (по имени, gviz)
+const SHEET_OPEN = 'Открытые ЗН'; // лист открытых заказ-нарядов (по имени, gviz)
 const PUB_ID = '';
 const AUTO_REFRESH_SEC = 300;     // 5 минут
 const MONTHLY_WINDOW = 5;         // сколько закрытых месяцев на графике
@@ -666,37 +689,80 @@ function renderMonthly(sv,daily,cur){
   });
 }
 
-// ══════════════════════════════════════ RENDER — DAILY
-function renderDaily(daily,sv){
-  if(!daily||!daily.dailyMargin.length)return;
-  const n=Math.max(daily.dailyMargin.length,daily.dailyCars.length);
-  const margins=daily.dailyMargin.slice(0,n);while(margins.length<n)margins.push(0);
-  const cars=daily.dailyCars.slice(0,n);while(cars.length<n)cars.push(0);
-  const planDay=(sv.m.plan||0)/daily.numDays;
-  const maxM=Math.max(...margins),maxDay=margins.indexOf(maxM)+1;
-  const avg=margins.reduce((a,b)=>a+b,0)/margins.length;
-  const above=margins.filter(v=>v>planDay).length;
-  document.getElementById('daily-head').style.display='';
-  document.getElementById('daily-card').style.display='';
-  document.getElementById('daily-sub').textContent=`Факт по дням · ${n} дней · пунктир = дневной план (${fR(planDay)})`;
-  document.getElementById('daily-stats').innerHTML=`
-    <div><div class="dstat-l">Лучший день</div><div class="dstat-v" style="color:#3ecf8e">${maxDay} числа</div><div class="dstat-s">${fR(maxM)}</div></div>
-    <div><div class="dstat-l">Среднее/день</div><div class="dstat-v" style="color:#ff6a2b">${fR(avg)}</div><div class="dstat-s">план: ${fR(planDay)}</div></div>
-    <div><div class="dstat-l">Выше плана</div><div class="dstat-v" style="color:#a78bfa">${above} из ${n}</div><div class="dstat-s">${Math.round(above/n*100)}%</div></div>
-    <div><div class="dstat-l">Сегодня</div><div class="dstat-v" style="color:${cH(sv.m.pctT)}">${fR(sv.m.factT)}</div><div class="dstat-s">${sv.mc.factT||0} машин</div></div>`;
-  upsertChart('d','cDaily',{
-    type:'bar',
-    data:{labels:Array.from({length:n},(_,i)=>i+1),datasets:[
-      {label:'Маржа без НДС',data:margins,
-        backgroundColor:margins.map(v=>v>=planDay?'rgba(62,207,142,.18)':v>=planDay*.6?'rgba(255,106,43,.18)':'rgba(240,97,106,.18)'),
-        borderColor:margins.map(v=>v>=planDay?'#3ecf8e':v>=planDay*.6?'#ff6a2b':'#f0616a'),
-        borderWidth:1.5,borderRadius:4,yAxisID:'y',order:2},
-      {label:'ТС шт',data:cars,type:'line',borderColor:'#a78bfa',backgroundColor:'transparent',borderWidth:2,pointRadius:3,pointBackgroundColor:'#a78bfa',tension:.3,yAxisID:'y2',order:1},
-      {label:'Дневной план',data:Array(n).fill(planDay),type:'line',borderColor:'#ff6a2b',borderWidth:1.5,borderDash:[5,4],pointRadius:0,yAxisID:'y',order:0,fill:false}
-    ]},
-    options:{responsive:true,interaction:{mode:'index'},plugins:{legend:{labels:{boxWidth:10,font:{size:11},color:'#9097a3'}},tooltip:{callbacks:{label:ctx=>{if(ctx.datasetIndex===0)return ` Маржа: ${fR(ctx.raw)}`;if(ctx.datasetIndex===1)return ` ТС: ${ctx.raw} шт`;return ` План/день: ${fR(ctx.raw)}`;}}}},
-      scales:{x:{grid:{color:'#1b1f28'},ticks:{font:{size:9}}},y:{position:'left',grid:{color:'#1b1f28'},ticks:{callback:v=>(v/1000).toFixed(0)+' тыс'}},y2:{position:'right',grid:{drawOnChartArea:false},ticks:{callback:v=>v+' шт',stepSize:2},min:0,max:18}}}
-  });
+// ══════════════════════════════════════ RENDER — ОТКРЫТЫЕ ЗАКАЗ-НАРЯДЫ (блок 6)
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function parseOpenOrders(raw){
+  const lines=(raw||'').split(/\r?\n/).filter(l=>l.trim());
+  const out=[];let updated='';
+  const now=new Date(),t0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  for(const line of lines){
+    const c=splitCsvLine(line).map(s=>(s||'').trim());
+    if(!c[0]||!/^ЗН/i.test(c[0]))continue;               // шапку и мусор пропускаем
+    const dm=(c[1]||'').match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+    let days=null;
+    if(dm){const ds=new Date(+dm[3],+dm[2]-1,+dm[1]);days=Math.max(0,Math.round((t0-ds)/86400000));}
+    if(c[6])updated=c[6];
+    out.push({num:c[0],open:dm?dm[1].padStart(2,'0')+'.'+dm[2].padStart(2,'0'):'—',days,client:c[2]||'—',mark:c[3]||'',model:c[4]||'',gos:c[5]||''});
+  }
+  out.sort((a,b)=>((b.days==null?-1:b.days)-(a.days==null?-1:a.days)));
+  return {list:out,updated};
+}
+function dayChip(d){
+  if(d==null)return '<span class="dchip">—</span>';
+  const cls=d>7?'r':d>3?'a':'g';
+  return `<span class="dchip ${cls}">${d===0?'сегодня':d+' дн'}</span>`;
+}
+function machineOf(o){
+  const mk=o.mark||'';
+  const plate=o.gos&&o.gos!=='—'?`<span class="plate">${esc(o.gos)}</span>`:'';
+  return `<span class="omach">${esc(mk||'—')}</span>${plate}`;
+}
+const OPEN_SHOW_DEFAULT=14;
+let openExpanded=false,OPEN_LAST=null;
+function toggleOpenList(){openExpanded=!openExpanded;if(OPEN_LAST)renderOpen(OPEN_LAST);}
+function renderOpen(parsed){
+  const list=parsed.list;
+  const tbody=document.getElementById('open-tbody');
+  const stats=document.getElementById('open-stats');
+  const moreWrap=document.getElementById('open-more-wrap');
+  const sub=document.getElementById('open-sub');
+  if(sub)sub.textContent='Все незакрытые ЗН · закрылся — пропал из списка'+(parsed.updated?' · выгрузка: '+parsed.updated:'');
+  if(!list.length){
+    stats.style.display='none';
+    tbody.innerHTML='<tr><td colspan="5" class="open-empty">🎉 Открытых заказ-нарядов нет — все закрыты</td></tr>';
+    moreWrap.innerHTML='';return;
+  }
+  const own=list.filter(o=>/собственный транспорт/i.test(o.client));
+  const cli=list.length-own.length;
+  const over7=list.filter(o=>(o.days||0)>7).length;
+  const withDays=list.filter(o=>o.days!=null);
+  const avg=withDays.length?Math.round(withDays.reduce((s,o)=>s+o.days,0)/withDays.length):0;
+  const oldest=list[0];
+  stats.style.display='';
+  stats.innerHTML=`
+    <div><div class="dstat-l">Открыто сейчас</div><div class="dstat-v" style="color:#ff6a2b">${list.length} ЗН</div><div class="dstat-s">клиентских ${cli} · собственных ${own.length}</div></div>
+    <div><div class="dstat-l">Старше 7 дней</div><div class="dstat-v" style="color:${over7>0?'#f0616a':'#3ecf8e'}">${over7} ЗН</div><div class="dstat-s">${over7>0?'долгие — проверить':'долгих нет'}</div></div>
+    <div><div class="dstat-l">Средний возраст</div><div class="dstat-v" style="color:#f5a524">${avg} дн</div><div class="dstat-s">по всем открытым</div></div>
+    <div><div class="dstat-l">Самый старый</div><div class="dstat-v" style="color:#f0616a">${oldest.days!=null?oldest.days+' дн':'—'}</div><div class="dstat-s">${esc(oldest.num)} · ${esc(oldest.client.length>22?oldest.client.slice(0,22)+'…':oldest.client)}</div></div>`;
+  const shown=openExpanded?list:list.slice(0,OPEN_SHOW_DEFAULT);
+  tbody.innerHTML=shown.map(o=>{
+    const isOwn=/собственный транспорт/i.test(o.client);
+    const clientCell=isOwn?'<span class="own-chip">ДЛС · свой транспорт</span>':`<span class="oclient" title="${esc(o.client)}">${esc(o.client)}</span>`;
+    return `<tr><td class="onum">${esc(o.num)}</td><td>${clientCell}</td><td>${machineOf(o)}</td><td class="odate">${o.open}</td><td>${dayChip(o.days)}</td></tr>`;
+  }).join('');
+  moreWrap.innerHTML=list.length>OPEN_SHOW_DEFAULT
+    ?`<button class="open-more" onclick="toggleOpenList()">${openExpanded?'Свернуть ↑':'Показать все '+list.length+' ↓'}</button>`
+    :'';
+}
+function renderOpenBlock(openCsv){
+  if(openCsv==null){
+    document.getElementById('open-stats').style.display='none';
+    document.getElementById('open-tbody').innerHTML='<tr><td colspan="5" class="open-empty">Лист «Открытые ЗН» пока недоступен — после ближайшего прогона импортёра список появится сам</td></tr>';
+    document.getElementById('open-more-wrap').innerHTML='';
+    return;
+  }
+  OPEN_LAST=parseOpenOrders(openCsv);
+  renderOpen(OPEN_LAST);
 }
 
 // ══════════════════════════════════════ FETCH
@@ -761,15 +827,17 @@ async function load(){
   const icon=document.getElementById('btn-icon');if(icon)icon.className='spin';
   try{
     // Три листа параллельно
-    const [svodR,dailyR,mesR]=await Promise.allSettled([
+    const [svodR,dailyR,mesR,openR]=await Promise.allSettled([
       fetchCsv(directUrl(GID_SVOD),t=>t.includes('Обслужено машин')&&t.includes('Маржа ВСЕГО без НДС')),
       fetchCsv(directUrl(GID_DAILY),t=>t.includes('Маржа ВСЕГО без НДС')&&t.length>1500),
       fetchCsv(gvizUrl(SHEET_MES),t=>t.includes('Маржа ВСЕГО без НДС')),
+      fetchCsv(gvizUrl(SHEET_OPEN),t=>t.includes('№ ЗН')||t.includes('Открыт')),
     ]);
     if(svodR.status!=='fulfilled')throw new Error(svodR.reason&&svodR.reason.message||'СВОД не загрузился');
     const svodCsv=svodR.value;
     const dailyCsv=dailyR.status==='fulfilled'?dailyR.value:null;
     const mesCsv=mesR.status==='fulfilled'?mesR.value:null;
+    const openCsv=openR.status==='fulfilled'?openR.value:null;
 
     const sv=parseSvod(svodCsv);
     if(!sv||sv.m.plan==null)throw new Error('Данные СВОД не распознаны. Проверьте публикацию листа.');
@@ -800,7 +868,7 @@ async function load(){
     renderPipeline(sv);
     renderComparison(sv,daily,cur);
     renderMonthly(sv,daily,cur);
-    if(daily)renderDaily(daily,sv);
+    renderOpenBlock(openCsv);
 
     // Индикатор актуальности + пометки fallback
     const slabelToday=document.getElementById('slabel-today'),titleToday=document.getElementById('title-today-detail'),pipeTitle=document.getElementById('pipe-title');
