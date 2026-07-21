@@ -216,6 +216,29 @@ canvas{max-width:100%}
 /* RESPONSIVE */
 @media(max-width:920px){.gauge-row,.cmp-row,.chart-row{grid-template-columns:1fr 1fr}.detail-row{grid-template-columns:1fr}}
 @media(max-width:640px){body{padding:12px}.gauge-row,.cmp-row,.chart-row{grid-template-columns:1fr}.hero h2{font-size:26px}.hdr{padding:14px 16px}.hright{width:100%;justify-content:space-between}}
+
+/* RESPONSIVE — блок 6 «Открытые ЗН» на телефоне: таблица → карточки */
+@media(max-width:640px){
+  .open-card{padding:16px 14px}
+  .daily-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;padding:13px 14px}
+  .daily-stats>div{min-width:0}
+  .open-table{display:block}
+  .open-table thead{display:none}
+  .open-table tbody{display:grid;gap:10px}
+  .open-table tr{display:flex;flex-wrap:wrap;align-items:center;column-gap:8px;row-gap:7px;padding:12px 13px;background:var(--card2);border:1px solid var(--border);border-radius:14px}
+  .open-table tr:hover td{background:transparent}
+  .open-table td,.open-table td:nth-child(4),.open-table td:last-child{display:block;width:auto;padding:0;border-bottom:none;font-size:12.5px;text-align:left}
+  .open-table td.onum{order:1;font-size:13.5px}
+  .open-table td:last-child{order:2;margin-left:auto}
+  .open-table td:nth-child(2){order:3;flex-basis:100%;min-width:0}
+  .open-table td:nth-child(3){order:4;min-width:0}
+  .open-table td.odate{order:5;margin-left:auto;font-size:11px}
+  .open-table td.odate::before{content:'открыт '}
+  .open-table .oclient{max-width:100%;white-space:normal;line-height:1.4}
+  .open-table td.open-empty{flex-basis:100%;padding:8px 0;text-align:center}
+  .open-table .plate{margin-left:7px}
+  .open-more{padding:13px}
+}
 </style>
 </head>
 <body>
@@ -341,7 +364,7 @@ canvas{max-width:100%}
     <div class="snum">6</div>
     <div><div class="stitle">Открытые заказ-наряды</div><div class="ssub" id="open-sub">Все незакрытые ЗН · закрылся — пропал из списка</div></div>
   </div>
-  <div class="card">
+  <div class="card open-card">
     <div class="daily-stats" id="open-stats"></div>
     <table class="ctable open-table">
       <thead><tr><th>№ ЗН</th><th>Клиент</th><th>Машина</th><th>Открыт</th><th>Дней открыт</th></tr></thead>
