@@ -10,13 +10,13 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="Бесплатная экспресс-диагностика грузовика и прицепа · RemGruz №1">
 <meta property="og:description" content="Осмотр основных узлов и считывание ошибок сканером бесплатно. По записи, до 31 августа. Монино, 38-й км М-7. Тел: +7 993 340-51-92">
-<meta property="og:image" content="https://alex6msk-ship-it.github.io/remgruz-dashboard-1/card.png">
-<meta property="og:image:width" content="924">
-<meta property="og:image:height" content="540">
+<meta property="og:image" content="https://alex6msk-ship-it.github.io/remgruz-dashboard-1/diag-card.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
 <meta property="og:url" content="https://alex6msk-ship-it.github.io/remgruz-dashboard-1/diagnostika.html">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="RemGruz №1 — бесплатная экспресс-диагностика">
-<meta name="twitter:image" content="https://alex6msk-ship-it.github.io/remgruz-dashboard-1/card.png">
+<meta name="twitter:title" content="RemGruz №1 · бесплатная экспресс-диагностика">
+<meta name="twitter:image" content="https://alex6msk-ship-it.github.io/remgruz-dashboard-1/diag-card.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -200,6 +200,22 @@ footer{border-top:1px solid var(--line);padding:44px 0 60px;color:var(--muted)}
 .reveal{transform:translateY(20px);transition:transform .7s cubic-bezier(.16,1,.3,1)}
 .reveal.in{transform:none}
 
+/* Модалка «как связаться» */
+.contact-modal{position:fixed;inset:0;z-index:100;background:rgba(5,6,8,.74);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
+.contact-modal.open{display:flex}
+.cm-box{background:var(--panel);border:1px solid var(--line-strong);border-radius:var(--r-card);padding:30px 26px;width:100%;max-width:390px;display:flex;flex-direction:column;gap:12px;box-shadow:0 30px 80px -20px rgba(0,0,0,.85)}
+.cm-title{font-family:"Unbounded";font-weight:700;font-size:19px;color:#fff;text-align:center;margin-bottom:6px;line-height:1.2}
+.cm-sub{font-size:13.5px;color:var(--muted);text-align:center;margin-bottom:10px}
+.cm-box .btn{width:100%}
+.cm-wa{background:#25D366;color:#04371d}
+.cm-wa:hover{background:#2be575}
+.cm-tg{background:#229ED9;color:#042c3f}
+.cm-tg:hover{background:#2bb3f0}
+.cm-max{background:#6E56F0;color:#fff}
+.cm-max:hover{background:#8570ff}
+.cm-close{background:none;border:none;color:var(--muted);font-family:"Manrope";font-weight:600;font-size:14px;cursor:pointer;padding:8px;margin-top:2px}
+.cm-close:hover{color:var(--text)}
+
 @media (max-width:900px){
   .split2,.why,.contact{grid-template-columns:1fr}
   .nodes,.nodes.n6{grid-template-columns:repeat(2,1fr)}
@@ -232,8 +248,9 @@ footer{border-top:1px solid var(--line);padding:44px 0 60px;color:var(--muted)}
     <h1>Бесплатная <span class="accent">экспресс-диагностика</span> грузовика и прицепа</h1>
     <p class="subtext">Осмотрим основные узлы и считаем ошибки сканером. Приезжайте по записи, покажем реальное состояние машины.</p>
     <div class="hero-cta">
-      <a class="btn btn-primary" href="tel:+79933405192">Записаться на диагностику</a>
-      <a class="btn btn-ghost" href="#kak-proehat">Как проехать</a>
+      <button class="btn btn-primary" onclick="openContact()">Записаться на диагностику</button>
+      <a class="btn btn-ghost" href="https://yandex.ru/maps/-/CTbZNG3f" target="_blank" rel="noopener">Как проехать</a>
+      <a class="btn btn-ghost" href="checklist.html">46 пунктов проверки</a>
     </div>
     <div class="hero-badges">
       <span class="pill hot"><span class="dot"></span>По записи · До 31 августа</span>
@@ -324,7 +341,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 60px;color:var(--muted)}
       <div class="map-card reveal">
         <h3>Приезжайте на диагностику</h3>
         <p>Постройте маршрут до сервиса или откройте нашу визитку с контактами и мессенджерами.</p>
-        <a class="btn btn-primary" href="https://yandex.ru/maps/?text=Монино%20Фруктовый%20тупик%208" target="_blank" rel="noopener">Построить маршрут</a>
+        <a class="btn btn-primary" href="https://yandex.ru/maps/-/CTbZNG3f" target="_blank" rel="noopener">Построить маршрут</a>
         <a class="btn btn-ghost" href="vizitka.html">Открыть визитку</a>
       </div>
     </div>
@@ -336,7 +353,7 @@ footer{border-top:1px solid var(--line);padding:44px 0 60px;color:var(--muted)}
   <div class="wrap">
     <h2 class="reveal">Проверьте машину <span class="accent">бесплатно</span></h2>
     <p class="reveal">Запишитесь на экспресс-диагностику до 31 августа. Один звонок, и мы назовём удобное время.</p>
-    <div class="reveal"><a class="btn btn-primary" href="tel:+79933405192">Записаться на диагностику</a></div>
+    <div class="reveal"><button class="btn btn-primary" onclick="openContact()">Записаться на диагностику</button></div>
   </div>
 </section>
 
@@ -357,9 +374,25 @@ footer{border-top:1px solid var(--line);padding:44px 0 60px;color:var(--muted)}
   </div>
 </footer>
 
+<div class="contact-modal" id="contactModal">
+  <div class="cm-box">
+    <div class="cm-title">Запишем на диагностику</div>
+    <div class="cm-sub">Позвоните или напишите, как удобнее</div>
+    <a class="btn btn-primary" href="tel:+79933405192">Позвонить · +7 993 340-51-92</a>
+    <a class="btn cm-wa" href="https://wa.me/79933405192" target="_blank" rel="noopener">Написать в WhatsApp</a>
+    <a class="btn cm-tg" href="https://t.me/+79933405192" target="_blank" rel="noopener">Написать в Telegram</a>
+    <a class="btn cm-max" href="https://max.ru/u/f9LHodD0cOKCpwzpkJTJHEKbif_zTvtsf65B0lu5RnzUoqazH05c3s0t30U" target="_blank" rel="noopener">Написать в MAX</a>
+    <button class="cm-close" onclick="closeContact()">Закрыть</button>
+  </div>
+</div>
+
 <script>
+function openContact(){document.getElementById('contactModal').classList.add('open')}
+function closeContact(){document.getElementById('contactModal').classList.remove('open')}
 // Мотивированная анимация: секции оффера мягко «всплывают» по мере чтения. Только transform. Уважает reduced-motion.
 (function(){
+  var cm=document.getElementById('contactModal');
+  if(cm)cm.addEventListener('click',function(e){if(e.target===cm)closeContact()});
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var els = document.querySelectorAll('.reveal');
   if(reduce || !('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('in')});return;}
