@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Что мы проверяем на осмотре · RemGruz №1</title>
+<meta name="description" content="Что входит в бесплатную экспресс-диагностику в RemGruz №1: 46 проверок по 6 системам грузовика и полуприцепа — компьютерная диагностика, двигатель, ходовая, тормоза, пневмосистема, электрика.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Что мы проверяем на осмотре · RemGruz №1">
+<meta property="og:description" content="46 проверок по 6 системам грузовика и полуприцепа. Бесплатная экспресс-диагностика по записи.">
+<meta property="og:image" content="https://alex6msk-ship-it.github.io/remgruz-dashboard-1/card.png">
+<meta property="og:url" content="https://alex6msk-ship-it.github.io/remgruz-dashboard-1/checklist.html">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800;900&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --bg:#0A0B0E;--panel:#161A21;--panel-2:#1E232D;
+  --line:rgba(255,255,255,.08);--line-strong:rgba(255,255,255,.14);
+  --accent:#FF6A2B;--accent-soft:rgba(255,106,43,.13);--accent-line:rgba(255,106,43,.32);
+  --text:#F3F4F6;--dim:#CFD3DA;--muted:#9097A3;
+  --r-card:20px;--r-sm:12px;--r-pill:999px;--maxw:1040px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:"Manrope",system-ui,sans-serif;line-height:1.5;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;z-index:-2;background:radial-gradient(120% 55% at 50% -14%,rgba(255,106,43,.15),rgba(232,85,26,.04) 44%,transparent 72%),var(--bg)}
+body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 21px,rgba(255,255,255,.015) 21px 22px);-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 10%,#000 100%);mask-image:linear-gradient(180deg,transparent 0,#000 10%,#000 100%)}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+a{color:inherit;text-decoration:none}
+h1,h2,h3,.u{font-family:"Unbounded",sans-serif;letter-spacing:-.01em}
+
+/* Топбар */
+.topbar{position:sticky;top:0;z-index:20;background:rgba(10,11,14,.82);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.topbar .row{display:flex;align-items:center;justify-content:space-between;gap:12px;height:64px}
+.tb-brand{font-family:"Unbounded";font-weight:800;font-size:17px;color:#fff}
+.tb-brand .n{color:var(--accent)}
+.tb-actions{display:flex;gap:10px;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:var(--r-pill);font-family:"Manrope";font-weight:700;font-size:14.5px;white-space:nowrap;border:1px solid transparent;cursor:pointer;transition:transform .15s ease,box-shadow .25s ease,background .2s ease,border-color .2s ease}
+.btn:active{transform:translateY(1px)}
+.btn-primary{background:var(--accent);color:#1a0d05;box-shadow:0 12px 26px -14px rgba(255,106,43,.8)}
+.btn-primary:hover{transform:translateY(-1px)}
+.btn-ghost{background:rgba(255,255,255,.05);color:var(--text);border-color:var(--line-strong)}
+.btn-ghost:hover{background:rgba(255,255,255,.09);border-color:var(--accent-line)}
+.btn-lg{padding:16px 30px;font-size:16px}
+
+/* Шапка */
+.doc-head{padding:50px 0 8px}
+.doc-head .kicker{font-family:"Manrope";font-weight:700;font-size:11.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.doc-head h1{font-size:clamp(28px,5vw,46px);font-weight:800;line-height:1.04;margin-bottom:12px}
+.doc-head h1 .n{color:var(--accent)}
+.doc-head .desc{color:var(--muted);font-size:16.5px;max-width:66ch;text-align:justify}
+.count{display:inline-flex;gap:8px;align-items:center;margin-top:18px;font-family:"Unbounded";font-weight:700;font-size:13px;color:var(--accent);background:var(--accent-soft);border:1px solid var(--accent-line);padding:9px 16px;border-radius:var(--r-pill)}
+
+/* Блоки-перечни */
+.block{margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r-card);padding:26px 28px}
+.block-hd{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.block-hd .bn{flex:0 0 auto;width:36px;height:36px;border-radius:11px;background:var(--accent-soft);border:1px solid var(--accent-line);color:var(--accent);display:flex;align-items:center;justify-content:center;font-family:"Unbounded";font-weight:800;font-size:15px}
+.block-hd h2{font-size:clamp(17px,2.4vw,21px);font-weight:700;color:#fff}
+.items{display:grid;grid-template-columns:1fr 1fr;gap:0 34px;border-top:1px solid var(--line);padding-top:6px}
+.item{display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid var(--line)}
+.item .mk{flex:0 0 auto;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-top:7px;opacity:.9}
+.item span{font-size:15px;color:var(--dim)}
+
+/* Ремонт под ключ */
+.after{margin-top:30px;background:linear-gradient(155deg,rgba(255,106,43,.15),rgba(255,106,43,.03));border:1px solid var(--accent-line);border-radius:var(--r-card);padding:32px}
+.after .eyebrow{font-family:"Manrope";font-weight:700;font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+.after h3{font-family:"Unbounded";font-weight:800;font-size:clamp(20px,3vw,26px);color:#fff;margin-bottom:12px;line-height:1.12}
+.after p{color:var(--dim);font-size:15.5px;max-width:74ch;text-align:justify}
+
+/* CTA */
+.bottom-cta{text-align:center;padding:52px 0 20px}
+.bottom-cta h3{font-size:clamp(22px,3.4vw,32px);font-weight:800;color:#fff;margin-bottom:8px}
+.bottom-cta h3 .accent{color:var(--accent);font-style:italic}
+.bottom-cta p{color:var(--muted);margin-bottom:22px}
+
+footer{border-top:1px solid var(--line);padding:30px 0 50px;margin-top:34px;color:var(--muted)}
+.foot-top{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.foot-brand{font-family:"Unbounded";font-weight:800;font-size:18px;color:#fff}
+.foot-brand .n{color:var(--accent)}
+.foot-links{display:flex;gap:20px;flex-wrap:wrap;font-size:14px}
+.foot-links a:hover{color:var(--accent)}
+.foot-req{font-size:12.5px;color:var(--dim)}
+
+.reveal{transform:translateY(18px);transition:transform .6s cubic-bezier(.16,1,.3,1)}
+.reveal.in{transform:none}
+
+@media (max-width:680px){
+  .items{grid-template-columns:1fr;gap:0}
+  .block{padding:22px 20px}
+}
+@media (prefers-reduced-motion:reduce){.reveal{transform:none;transition:none}html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap row">
+    <span class="tb-brand">RemGruz <span class="n">№1</span></span>
+    <div class="tb-actions">
+      <a class="btn btn-ghost" href="diagnostika.html">← На страницу акции</a>
+      <a class="btn btn-primary" href="tel:+79933405192">Записаться</a>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="doc-head">
+    <div class="kicker">Бесплатная экспресс-диагностика</div>
+    <h1>Что мы проверяем <span class="n">на осмотре</span></h1>
+    <p class="desc">Перед вами полный список того, что мы смотрим на бесплатном осмотре: компьютерная диагностика по 16 каналам плюс визуальный контроль двигателя, ходовой, тормозов, пневмосистемы, полуприцепа и электрики.</p>
+    <div class="count">46 проверок · 6 систем</div>
+  </div>
+
+  <!-- БЛОК 1 -->
+  <div class="block reveal">
+    <div class="block-hd"><span class="bn">1</span><h2>Компьютерная диагностика</h2></div>
+    <div class="items">
+      <div class="item"><span class="mk"></span><span>ЭБУ двигателя: коды ошибок (SPN/FMI)</span></div>
+      <div class="item"><span class="mk"></span><span>ABS/EBS тягача: ошибки, контрольная лампа</span></div>
+      <div class="item"><span class="mk"></span><span>ABS/EBS полуприцепа: ошибки, лампа</span></div>
+      <div class="item"><span class="mk"></span><span>SCR/AdBlue: ошибки, уровень, дерейт</span></div>
+      <div class="item"><span class="mk"></span><span>Сажевый фильтр (DPF)/EGR: статус, ошибки</span></div>
+      <div class="item"><span class="mk"></span><span>Приборная панель: активные ошибки, лампы</span></div>
+      <div class="item"><span class="mk"></span><span>Ограничитель скорости 85 км/ч</span></div>
+      <div class="item"><span class="mk"></span><span>Напряжение бортсети, заряд генератора</span></div>
+    </div>
+  </div>
+
+  <!-- БЛОК 2 -->
+  <div class="block reveal">
+    <div class="block-hd"><span class="bn">2</span><h2>Двигатель и подкапотное пространство</h2></div>
+    <div class="items">
+      <div class="item"><span class="mk"></span><span>Уровень масла ДВС, подтёки в отсеке</span></div>
+      <div class="item"><span class="mk"></span><span>Охлаждающая жидкость: уровень, подтёки</span></div>
+      <div class="item"><span class="mk"></span><span>Патрубки и хомуты системы охлаждения</span></div>
+      <div class="item"><span class="mk"></span><span>ГУР: уровень жидкости, подтёки</span></div>
+      <div class="item"><span class="mk"></span><span>Ремни привода (генератор, вентилятор): износ</span></div>
+      <div class="item"><span class="mk"></span><span>Ролики и натяжитель ремня: люфт, шум</span></div>
+      <div class="item"><span class="mk"></span><span>Турбокомпрессор: люфт вала, подтёки масла</span></div>
+      <div class="item"><span class="mk"></span><span>Компрессор пневмосистемы: подтёки, крепление</span></div>
+      <div class="item"><span class="mk"></span><span>Радиатор, интеркулер: засор сот, подтёки</span></div>
+      <div class="item"><span class="mk"></span><span>АКБ: напряжение, клеммы, крепление</span></div>
+    </div>
+  </div>
+
+  <!-- БЛОК 3 -->
+  <div class="block reveal">
+    <div class="block-hd"><span class="bn">3</span><h2>Ходовая, рулевое, тормоза тягача</h2></div>
+    <div class="items">
+      <div class="item"><span class="mk"></span><span>Тормозные колодки, накладки: остаток</span></div>
+      <div class="item"><span class="mk"></span><span>Тормозные диски, барабаны: задиры, трещины</span></div>
+      <div class="item"><span class="mk"></span><span>Шины тягача: протектор, порезы, давление</span></div>
+      <div class="item"><span class="mk"></span><span>Рулевые тяги и наконечники: люфт</span></div>
+      <div class="item"><span class="mk"></span><span>Шкворни поворотных кулаков: люфт</span></div>
+      <div class="item"><span class="mk"></span><span>Амортизаторы: подтёки, крепление</span></div>
+      <div class="item"><span class="mk"></span><span>Рессоры и сайлентблоки: трещины, просадка</span></div>
+      <div class="item"><span class="mk"></span><span>Стабилизатор: втулки, стойки</span></div>
+      <div class="item"><span class="mk"></span><span>Подтёки масла: КПП, редуктор моста, полуоси</span></div>
+      <div class="item"><span class="mk"></span><span>Кардан, крестовины: люфт</span></div>
+      <div class="item"><span class="mk"></span><span>Пневмоподушки тягача: состояние, посадка</span></div>
+    </div>
+  </div>
+
+  <!-- БЛОК 4 -->
+  <div class="block reveal">
+    <div class="block-hd"><span class="bn">4</span><h2>Пневмосистема и сцепное устройство (ССУ)</h2></div>
+    <div class="items">
+      <div class="item"><span class="mk"></span><span>Утечки воздуха пневмосистемы</span></div>
+      <div class="item"><span class="mk"></span><span>Ресиверы: крепление, коррозия</span></div>
+      <div class="item"><span class="mk"></span><span>ССУ (седло): люфт, износ замка и подковы</span></div>
+      <div class="item"><span class="mk"></span><span>Шкворень полуприцепа: состояние, выработка</span></div>
+    </div>
+  </div>
+
+  <!-- БЛОК 5 -->
+  <div class="block reveal">
+    <div class="block-hd"><span class="bn">5</span><h2>Полуприцеп</h2></div>
+    <div class="items">
+      <div class="item"><span class="mk"></span><span>Утечки воздуха магистралей, энергоаккумуляторов</span></div>
+      <div class="item"><span class="mk"></span><span>Колодки, накладки осей: остаток</span></div>
+      <div class="item"><span class="mk"></span><span>Тормозные барабаны, диски: состояние</span></div>
+      <div class="item"><span class="mk"></span><span>Шины полуприцепа: протектор, давление</span></div>
+      <div class="item"><span class="mk"></span><span>Подушки, амортизаторы, рессоры</span></div>
+      <div class="item"><span class="mk"></span><span>Ступичные подшипники: люфт</span></div>
+      <div class="item"><span class="mk"></span><span>Опорное устройство (лапа): работа, крепление</span></div>
+      <div class="item"><span class="mk"></span><span>Оси и рама: трещины, деформации</span></div>
+    </div>
+  </div>
+
+  <!-- БЛОК 6 -->
+  <div class="block reveal">
+    <div class="block-hd"><span class="bn">6</span><h2>Электрика и световые приборы</h2></div>
+    <div class="items">
+      <div class="item"><span class="mk"></span><span>Световые приборы тягача: все режимы</span></div>
+      <div class="item"><span class="mk"></span><span>Световые приборы полуприцепа</span></div>
+      <div class="item"><span class="mk"></span><span>Розетки ABS/EBS: окисление, фиксация</span></div>
+      <div class="item"><span class="mk"></span><span>Провода и спираль питания прицепа</span></div>
+      <div class="item"><span class="mk"></span><span>Автономный отопитель: пуск и работа</span></div>
+    </div>
+  </div>
+
+  <div class="after reveal">
+    <div class="eyebrow">После осмотра</div>
+    <h3>Всё, что найдём, можем сами и починить</h3>
+    <p>По результату осмотра назовём, что требует внимания. Выполняем работы любой сложности: двигатель, трансмиссия, тормоза, электрика, прошивка и кодирование блоков. Запчасти подберём и закажем сами. Всё по записи, в удобное для вас время.</p>
+  </div>
+
+  <div class="bottom-cta">
+    <h3>Проверим вашу машину <span class="accent">бесплатно</span></h3>
+    <p>По записи, до 31 августа. Один звонок — и назовём удобное время.</p>
+    <a class="btn btn-primary btn-lg" href="tel:+79933405192">Записаться на диагностику</a>
+  </div>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-top">
+      <span class="foot-brand">RemGruz <span class="n">№1</span></span>
+      <div class="foot-links">
+        <a href="tel:+79933405192">+7 993 340-51-92</a>
+        <a href="diagnostika.html">Акция</a>
+        <a href="vizitka.html">Визитка</a>
+      </div>
+    </div>
+    <div class="foot-req">ООО «ДЛСГРУПП» · ИНН 7743376172 · ОГРН 1227700112287 · пгт Монино, Фруктовый тупик, 8</div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var els=document.querySelectorAll('.reveal');
+  if(reduce||!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('in')});return;}
+  var io=new IntersectionObserver(function(en){en.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);}})},{threshold:.1,rootMargin:'0px 0px -6% 0px'});
+  els.forEach(function(e){io.observe(e)});
+})();
+</script>
+</body>
+</html>
