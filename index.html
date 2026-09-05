@@ -189,6 +189,9 @@ canvas{max-width:100%}
 .open-more{display:block;width:100%;margin-top:12px;padding:11px;background:var(--card2);border:1px solid var(--border2);border-radius:12px;color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;font-family:'Manrope';transition:.2s}
 .open-more:hover{border-color:var(--accent);color:var(--accent)}
 .open-empty{padding:26px 10px;text-align:center;color:var(--muted);font-size:13px;font-weight:600}
+.stale-warn{display:flex;align-items:flex-start;gap:10px;margin-bottom:14px;padding:12px 14px;border:1px solid rgba(240,97,106,.45);border-radius:12px;background:var(--red-soft);color:#f0616a;font-size:12px;font-weight:700;line-height:1.5}
+.stale-warn b{color:#ff8a90}
+.stale-warn .sw-i{font-size:15px;line-height:1.2}
 
 /* ===== БЛОК 6 «ВОЗВРАЩАЕМОСТЬ КЛИЕНТОВ» ===== */
 .ret-chart-wrap{height:300px;position:relative}
@@ -408,6 +411,7 @@ canvas{max-width:100%}
     <div><div class="stitle">Открытые заказ-наряды</div><div class="ssub" id="open-sub">Все незакрытые ЗН · закрылся — пропал из списка</div></div>
   </div>
   <div class="card open-card">
+    <div id="open-stale"></div>
     <div class="daily-stats" id="open-stats"></div>
     <table class="ctable open-table">
       <thead><tr><th>№ ЗН</th><th>Клиент</th><th>Машина</th><th>Открыт</th><th>Дней открыт</th></tr></thead>
@@ -759,20 +763,31 @@ function renderMonthly(sv,daily,cur){
 // ══════════════════════════════════════ RENDER — ОТКРЫТЫЕ ЗАКАЗ-НАРЯДЫ (блок 6)
 function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function parseOpenOrders(raw){
+  // 🔴 05.09.2026: возраст ЗН считается от ДАТЫ ВЫГРУЗКИ (колонка «Обновлено»), а НЕ от «сегодня».
+  // Раньше считали от today — при остановке импортёра список замирал, но «дней открыт» продолжал
+  // расти, и блок молча врал (проверено: лист стоял с 01.09, на экране 05.09 показывало 31 дн).
   const lines=(raw||'').split(/\r?\n/).filter(l=>l.trim());
-  const out=[];let updated='';
-  const now=new Date(),t0=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const rowsC=[];let updated='';
   for(const line of lines){
     const c=splitCsvLine(line).map(s=>(s||'').trim());
     if(!c[0]||!/^ЗН/i.test(c[0]))continue;               // шапку и мусор пропускаем
+    if(c[6])updated=c[6];
+    rowsC.push(c);
+  }
+  const now=new Date(),today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const um=updated.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+  const snap=um?new Date(+um[3],+um[2]-1,+um[1]):null;   // дата снимка
+  const t0=snap||today;                                  // база отсчёта возраста
+  const staleDays=snap?Math.max(0,Math.round((today-snap)/86400000)):null;
+  const out=[];
+  for(const c of rowsC){
     const dm=(c[1]||'').match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
     let days=null;
     if(dm){const ds=new Date(+dm[3],+dm[2]-1,+dm[1]);days=Math.max(0,Math.round((t0-ds)/86400000));}
-    if(c[6])updated=c[6];
     out.push({num:c[0],open:dm?dm[1].padStart(2,'0')+'.'+dm[2].padStart(2,'0'):'—',days,client:c[2]||'—',mark:c[3]||'',model:c[4]||'',gos:c[5]||''});
   }
   out.sort((a,b)=>((b.days==null?-1:b.days)-(a.days==null?-1:a.days)));
-  return {list:out,updated};
+  return {list:out,updated,snapDate:um?um[1].padStart(2,'0')+'.'+um[2].padStart(2,'0')+'.'+um[3]:'',staleDays};
 }
 function dayChip(d){
   if(d==null)return '<span class="dchip">—</span>';
@@ -793,7 +808,11 @@ function renderOpen(parsed){
   const stats=document.getElementById('open-stats');
   const moreWrap=document.getElementById('open-more-wrap');
   const sub=document.getElementById('open-sub');
-  if(sub)sub.textContent='Все незакрытые ЗН · закрылся — пропал из списка'+(parsed.updated?' · выгрузка: '+parsed.updated:'');
+  const stale=document.getElementById('open-stale');
+  if(sub)sub.textContent='Все незакрытые ЗН · закрылся — пропал из списка'+(parsed.updated?' · данные на '+parsed.updated:'');
+  if(stale)stale.innerHTML=(parsed.staleDays!=null&&parsed.staleDays>=1)
+    ?`<div class="stale-warn"><div class="sw-i">🔴</div><div>Список устарел на <b>${parsed.staleDays} дн</b> — импортёр не обновлял лист «Открытые ЗН» с <b>${esc(parsed.updated)}</b>.<br>Ниже — снимок на ${esc(parsed.snapDate||'ту дату')}: закрытые с тех пор ЗН ещё висят, новые не показаны. Возраст посчитан на дату снимка. Проверить прогон импортёра.</div></div>`
+    :'';
   if(!list.length){
     stats.style.display='none';
     tbody.innerHTML='<tr><td colspan="5" class="open-empty">🎉 Открытых заказ-нарядов нет — все закрыты</td></tr>';
@@ -809,7 +828,7 @@ function renderOpen(parsed){
   stats.innerHTML=`
     <div><div class="dstat-l">Открыто сейчас</div><div class="dstat-v" style="color:#ff6a2b">${list.length} ЗН</div><div class="dstat-s">клиентских ${cli} · собственных ${own.length}</div></div>
     <div><div class="dstat-l">Старше 7 дней</div><div class="dstat-v" style="color:${over7>0?'#f0616a':'#3ecf8e'}">${over7} ЗН</div><div class="dstat-s">${over7>0?'долгие — проверить':'долгих нет'}</div></div>
-    <div><div class="dstat-l">Средний возраст</div><div class="dstat-v" style="color:#f5a524">${avg} дн</div><div class="dstat-s">по всем открытым</div></div>
+    <div><div class="dstat-l">Средний возраст</div><div class="dstat-v" style="color:#f5a524">${avg} дн</div><div class="dstat-s">по всем открытым${parsed.snapDate?' · на '+esc(parsed.snapDate):''}</div></div>
     <div><div class="dstat-l">Самый старый</div><div class="dstat-v" style="color:#f0616a">${oldest.days!=null?oldest.days+' дн':'—'}</div><div class="dstat-s">${esc(oldest.num)} · ${esc(oldest.client.length>22?oldest.client.slice(0,22)+'…':oldest.client)}</div></div>`;
   const shown=openExpanded?list:list.slice(0,OPEN_SHOW_DEFAULT);
   tbody.innerHTML=shown.map(o=>{
@@ -823,6 +842,7 @@ function renderOpen(parsed){
 }
 function renderOpenBlock(openCsv){
   if(openCsv==null){
+    const st=document.getElementById('open-stale');if(st)st.innerHTML='';
     document.getElementById('open-stats').style.display='none';
     document.getElementById('open-tbody').innerHTML='<tr><td colspan="5" class="open-empty">Лист «Открытые ЗН» пока недоступен — после ближайшего прогона импортёра список появится сам</td></tr>';
     document.getElementById('open-more-wrap').innerHTML='';
