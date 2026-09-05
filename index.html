@@ -209,8 +209,33 @@ canvas{max-width:100%}
 .tag-live{display:inline-block;margin-left:7px;padding:2px 7px;border-radius:6px;background:var(--accent-soft);color:#ffa173;font-size:9px;font-weight:800;vertical-align:1px}
 @media(max-width:920px){.ret-chart-wrap{height:260px}}
 @media(max-width:640px){
-  .ret-table th:nth-child(6),.ret-table td:nth-child(6){display:none}
+  /* 06.09.2026: таблица когорт не влезала в 390px и тащила ВСЮ страницу вбок
+     (397px при контейнере 366px). Переведена в карточки — как блок 7. */
   .ret-big{font-size:34px}
+  .ret-table{display:block}
+  .ret-table thead{display:none}
+  .ret-table tbody{display:grid;gap:10px}
+  .ret-table tr{display:flex;flex-wrap:wrap;align-items:center;column-gap:9px;row-gap:7px;padding:12px 13px;background:var(--card2);border:1px solid var(--border);border-radius:14px}
+  .ret-table tr:hover td{background:transparent}
+  .ret-table tr.ret-cur{border-color:rgba(255,106,43,.4)}
+  .ret-table tr.ret-cur td{background:transparent}
+  .ret-table td,.ret-table td:nth-child(n+3){display:block;width:auto;padding:0;border-bottom:none;text-align:left;font-size:12.5px}
+  .ret-table td:nth-child(1){order:1;font-weight:800;color:var(--text);font-size:13px}
+  .ret-table td:nth-child(2){order:2}
+  .ret-table td:nth-child(2)::before{content:'→ ';color:var(--muted2)}
+  .ret-table td:nth-child(5){order:3;margin-left:auto}
+  /* распорка: принудительный перенос строки внутри flex-карточки, чтобы
+     «клиентов · вернулись · доля маржи» шли одной строкой, а не рассыпались */
+  .ret-table tr::after{content:'';flex-basis:100%;height:0;order:4}
+  .ret-table td:nth-child(3){order:5;color:var(--muted)}
+  .ret-table td:nth-child(4){order:6;color:var(--muted)}
+  .ret-table td:nth-child(6){order:7;color:var(--muted)}
+  .ret-table td:nth-child(3)::before{content:'клиентов ';color:var(--muted2);font-weight:700}
+  .ret-table td:nth-child(4)::before{content:'· вернулись ';color:var(--muted2);font-weight:700}
+  .ret-table td:nth-child(6)::before{content:'· доля маржи ';color:var(--muted2);font-weight:700}
+  .ret-table td:nth-child(3),.ret-table td:nth-child(4),.ret-table td:nth-child(6){display:inline-block}
+  .ret-table td[colspan]{order:5;flex-basis:100%}
+  .ret-table td[colspan]::before{content:none}
 }
 
 /* COUNTDOWN */
@@ -239,11 +264,26 @@ canvas{max-width:100%}
 /* RESPONSIVE */
 @media(max-width:920px){.gauge-row,.cmp-row,.chart-row{grid-template-columns:1fr 1fr}.detail-row{grid-template-columns:1fr}}
 @media(max-width:640px){body{padding:12px}.gauge-row,.cmp-row,.chart-row{grid-template-columns:1fr}.hero h2{font-size:26px}.hdr{padding:14px 16px}.hright{width:100%;justify-content:space-between}}
+/* Телефон: таблицам «Детализация/Сегодня» даём воздух за счёт горизонтальных
+   отступов ячеек. NOWRAP на числа НЕ ставим: он раздувает min-content таблицы
+   и выталкивает страницу за экран (проверено — уезжала на 10 px). */
+@media(max-width:640px){
+  .ctable th,.ctable td{padding-left:5px;padding-right:5px}
+  .ctable td{line-height:1.35}
+}
+/* Совсем узкие экраны (iPhone SE, 320 px): без этого карточки вылезали на 5 px */
+@media(max-width:360px){
+  body{padding:9px}
+  .card{padding:16px 12px}
+  .open-card{padding:14px 11px}
+}
 
 /* RESPONSIVE — блок 6 «Открытые ЗН» на телефоне: таблица → карточки */
 @media(max-width:640px){
   .open-card{padding:16px 14px}
   .daily-stats{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px;padding:13px 14px}
+  .daily-stats .dstat-s{font-size:9.5px;line-height:1.4;letter-spacing:0}
+  .stale-warn{padding:11px 12px;font-size:11.5px;gap:8px}
   .daily-stats>div{min-width:0}
   .open-table{display:block}
   .open-table thead{display:none}
